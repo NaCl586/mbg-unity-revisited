@@ -1,0 +1,406 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Antlr4.Runtime;
+using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.SceneManagement;
+#endif
+
+namespace TS
+{
+    public class MissionImporter : MonoBehaviour
+    {
+        public string MissionPath;
+        public List<TSObject> MissionObjects;
+
+        [Header("Prefabs")]
+        public GameObject interiorPrefab;
+        public GameObject movingPlatformPrefab;
+        public GameObject triggerGoToTarget;
+        [Space]
+        public GameObject trapdoorPrefab;
+
+        [Header("References")]
+        public GameObject globalMarble;
+        public GameObject startPad;
+
+        void Start()
+        {
+#if UNITY_EDITOR
+            // Prevent auto-import when not in Play Mode
+            if (!Application.isPlaying)
+                return;
+#endif
+            ImportMission();
+        }
+
+        public void ImportMission()
+        {
+            if (string.IsNullOrEmpty(MissionPath))
+                return;
+
+            var lexer = new TSLexer(
+                new AntlrFileStream(Path.Combine(Application.streamingAssetsPath, MissionPath))
+            );
+            var parser = new TSParser(new CommonTokenStream(lexer));
+            var file = parser.start();
+
+            if (parser.NumberOfSyntaxErrors > 0)
+            {
+                Debug.LogError("Could not parse mission file");
+                return;
+            }
+
+            MissionObjects = new List<TSObject>();
+
+            foreach (var decl in file.decl())
+            {
+                var objectDecl = decl.stmt()?.expression_stmt()?.stmt_expr()?.object_decl();
+                if (objectDecl == null)
+                    continue;
+
+                MissionObjects.Add(ProcessObject(objectDecl));
+            }
+
+            if (MissionObjects.Count == 0)
+                return;
+
+            var mission = MissionObjects[0];
+
+            foreach (var obj in mission.RecursiveChildren())
+            {
+                //Interior
+                if (obj.ClassName == "InteriorInstance")
+                {
+                    var gobj = Instantiate(interiorPrefab, transform, false);
+                    gobj.name = "InteriorInstance";
+
+                    var position = ConvertPoint(ParseVectorString(obj.GetField("position")));
+                    var rotation = ConvertRotation(ParseVectorString(obj.GetField("rotation")));
+                    var scale = ConvertScale(ParseVectorString(obj.GetField("scale")));
+
+                    gobj.transform.localPosition = position;
+                    gobj.transform.localRotation = rotation;
+                    gobj.transform.localScale = scale;
+
+                    var difPath = ResolvePath(obj.GetField("interiorFile"), MissionPath);
+                    var dif = gobj.GetComponent<Dif>();
+                    dif.filePath = difPath;
+                    if (!dif.GenerateMesh(-1))
+                    {
+                        Destroy(gobj.gameObject);
+                    }
+                }
+
+                //Shapes
+                else if (obj.ClassName == "StaticShape")
+                {
+                    string objectName = obj.GetField("dataBlock");
+
+                    if (objectName == "StartPad")
+                    {
+                        var position = ConvertPoint(ParseVectorString(obj.GetField("position")));
+                        var rotation = ConvertRotation(ParseVectorString(obj.GetField("rotation")));
+
+                        startPad.transform.localPosition = position;
+                        startPad.transform.localRotation = rotation;
+
+                        globalMarble.transform.position = startPad.transform.GetChild(0).position;
+                        CameraController.instance.ResetCam();
+                    }
+
+                    else if (objectName.ToLower() == "trapdoor")
+                    {
+                        var gobj = Instantiate(trapdoorPrefab, transform, false);
+                        gobj.name = "Trapdoor";
+
+                        var position = ConvertPoint(ParseVectorString(obj.GetField("position")));
+                        var rotation = ConvertRotation(ParseVectorString(obj.GetField("rotation")));
+                        var scale = ConvertScale(ParseVectorString(obj.GetField("scale")));
+
+                        gobj.transform.localPosition = position;
+                        gobj.transform.localRotation = rotation * Quaternion.Euler(90f, 0f, 0f); ;
+                        gobj.transform.localScale = new Vector3(scale.x * gobj.transform.localScale.x,
+                                                                scale.y * gobj.transform.localScale.y,
+                                                                scale.z * gobj.transform.localScale.z
+                                                                );
+                    }
+                }
+
+                //Moving platforms
+                else if (obj.ClassName == "SimGroup" && obj.Name != "MissionGroup")
+                {
+                    // Grab the PathedInterior child
+                    var pathedInterior = obj.RecursiveChildren()
+                        .FirstOrDefault(o => o.ClassName == "PathedInterior");
+
+                    if (pathedInterior == null)
+                        continue;
+
+                    MovingPlatform movingPlatform = null;
+                    int indexStr = -1;
+
+                    if (pathedInterior != null)
+                    {
+                        var gobj = Instantiate(movingPlatformPrefab, transform, false);
+                        gobj.name = "PathedInterior";
+
+                        var position = ConvertPoint(ParseVectorString(pathedInterior.GetField("basePosition")));
+                        var rotation = ConvertRotation(ParseVectorString(pathedInterior.GetField("baseRotation")));
+                        var scale = ConvertScale(ParseVectorString(pathedInterior.GetField("baseScale")));
+
+                        gobj.transform.localPosition = position;
+                        gobj.transform.localRotation = rotation;
+                        gobj.transform.localScale = scale;
+
+                        var resource = pathedInterior.GetField("interiorResource");
+                        var difPath = ResolvePath(resource, MissionPath);
+
+                        var dif = gobj.GetComponent<Dif>();
+                        dif.filePath = difPath;
+
+                        // Parse interiorIndex from mission file
+                        indexStr = int.Parse(pathedInterior.GetField("interiorIndex"));
+                        dif.GenerateMesh(indexStr);
+
+                        movingPlatform = gobj.GetComponent<MovingPlatform>();
+
+                        string initialPosition = pathedInterior.GetField("initialPosition");
+                        if (initialPosition != string.Empty)
+                            movingPlatform.initialPosition = (float)int.Parse(initialPosition) / 1000;
+                        else
+                            movingPlatform.initialPosition = 0;
+
+                        string initialTargetPosition = pathedInterior.GetField("initialTargetPosition");
+                        if (initialTargetPosition != string.Empty)
+                        {
+                            int itp = -1;
+                            if (int.TryParse(initialTargetPosition, out itp))
+                            {
+                                if (itp == 0)
+                                {
+                                    movingPlatform.movementMode = MovementMode.Triggered;
+                                }
+                                else
+                                {
+                                    movingPlatform.movementMode = MovementMode.Constant;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            movingPlatform.movementMode = MovementMode.Triggered;
+                        }
+                    }
+
+                    //if ITP = 0, put the triggergototargets
+                    if (movingPlatform.movementMode == MovementMode.Triggered)
+                    {
+                        var tgtts = obj.RecursiveChildren()
+                            .Where(o => o.ClassName == "Trigger")
+                            .ToList();
+
+                        foreach (var trigger in tgtts)
+                        {
+                            var tgttObj = Instantiate(triggerGoToTarget, transform, false);
+                            tgttObj.name = "TriggerGoToTarget";
+
+                            var position = ConvertPoint(ParseVectorString(trigger.GetField("position")));
+                            var rotation = ConvertRotation(ParseVectorString(trigger.GetField("rotation")));
+                            var scale = ConvertScale(ParseVectorString(trigger.GetField("scale")));
+
+                            var polyhedronScale = PolyhedronToBoxSize(ParseVectorString(trigger.GetField("polyhedron")));
+
+                            tgttObj.transform.localPosition = position;
+                            tgttObj.transform.localRotation = rotation;
+                            tgttObj.transform.localScale = new Vector3(scale.x * polyhedronScale.z, scale.y * polyhedronScale.x, scale.z * polyhedronScale.y);
+
+                            TriggerGoToTarget tgtt = tgttObj.GetComponent<TriggerGoToTarget>();
+                            tgtt.movingPlatform = movingPlatform;
+                            tgtt.targetTime = (float)int.Parse(trigger.GetField("targetTime")) / 1000;
+                        }
+                    }
+
+                    // Grab all markers inside any Path child
+                    var markers = obj.RecursiveChildren()
+                        .Where(o => o.ClassName == "Marker")
+                        .ToList();
+
+                    movingPlatform.sequenceNumbers = new SequenceNumber[markers.Count];
+                    List<SmoothingType> smoothingTypes = new List<SmoothingType>();
+
+                    foreach (var marker in markers)
+                    {
+                        Vector3 pos = ConvertPoint(ParseVectorString(marker.GetField("position")));
+                        int seq = int.Parse(marker.GetField("seqNum"));
+                        int msToNext = int.Parse(marker.GetField("msToNext"));
+
+                        SmoothingType smoothingType = (SmoothingType)Enum.Parse(typeof(SmoothingType), marker.GetField("smoothingType"));
+                        smoothingTypes.Add(smoothingType);
+
+                        GameObject markerInstance = Instantiate(new GameObject(), transform, false);
+                        markerInstance.name = "Marker Interior " + indexStr + " (" + seq + ")";
+                        markerInstance.transform.position = pos;
+
+                        SequenceNumber sequence = new SequenceNumber();
+                        sequence.marker = markerInstance;
+                        sequence.secondsToNext = (float)msToNext / 1000;
+
+                        movingPlatform.sequenceNumbers[seq] = sequence;
+                    }
+
+                    SmoothingType smoothing = smoothingTypes
+                        .GroupBy(x => x)
+                        .OrderByDescending(g => g.Count())
+                        .First()
+                        .Key;
+
+                    movingPlatform.smoothing = smoothing;
+                    movingPlatform.InitMovingPlatform();
+                }
+            }
+
+            globalMarble.GetComponent<Movement>().GenerateMeshData();
+        }
+
+#if UNITY_EDITOR
+        public void ImportMissionInEditor()
+        {
+            if (!EditorUtility.DisplayDialog(
+                "Import Mission",
+                "This will regenerate the mission and overwrite existing imported objects.\nContinue?",
+                "Import",
+                "Cancel"))
+                return;
+
+            // Delete existing children
+            var children = new List<GameObject>();
+            foreach (Transform child in transform)
+                children.Add(child.gameObject);
+
+            foreach (var child in children)
+                Undo.DestroyObjectImmediate(child);
+
+            ImportMission();
+
+            EditorSceneManager.MarkSceneDirty(gameObject.scene);
+            EditorSceneManager.SaveScene(gameObject.scene);
+
+            Debug.Log("Mission imported and scene saved.");
+        }
+#endif
+
+        // -------------------------
+        // Conversion helpers
+        // -------------------------
+
+        private Vector3 ConvertPoint(float[] p)
+        {
+            return new Vector3(p[0], p[2], p[1]);
+        }
+
+        private Quaternion ConvertRotation(float[] torqueRotation)
+        {
+            // Torque point is an angle axis in torquespace
+            float angle = torqueRotation[3];
+            Vector3 axis = new Vector3(torqueRotation[0], -torqueRotation[1], torqueRotation[2]);
+            Quaternion rot = Quaternion.AngleAxis(angle, axis);
+            rot = Quaternion.Euler(-90.0f, 0, 0) * rot;
+            return rot;
+        }
+
+        private Vector3 ConvertScale(float[] s)
+        {
+            return new Vector3(s[0], s[1], s[2]);
+        }
+
+        private Vector3 PolyhedronToBoxSize(float[] polyhedron)
+        {
+            if (polyhedron == null || polyhedron.Length != 12)
+                throw new ArgumentException("Polyhedron must be 12 floats: origin + 3 edge vectors");
+
+            // Edge vectors start at index 3
+            Vector3 edgeX = new Vector3(polyhedron[3], polyhedron[4], polyhedron[5]);
+            Vector3 edgeY = new Vector3(polyhedron[6], polyhedron[7], polyhedron[8]);
+            Vector3 edgeZ = new Vector3(polyhedron[9], polyhedron[10], polyhedron[11]);
+
+            // Size is simply the length of each edge vector
+            return new Vector3(
+                edgeX.magnitude,
+                edgeY.magnitude,
+                edgeZ.magnitude
+            );
+        }
+
+
+        private float[] ParseVectorString(string vs)
+        {
+            return vs.Split(' ').Select(float.Parse).ToArray();
+        }
+
+        private string ResolvePath(string assetPath, string misPath)
+        {
+            while (assetPath[0] == '/')
+                assetPath = assetPath.Substring(1);
+
+            switch (assetPath[0])
+            {
+                case '~' when misPath.Contains('/'):
+                    return misPath.Substring(0, misPath.IndexOf('/')) + assetPath.Substring(1);
+                case '~':
+                    return assetPath.Substring(2);
+                case '.':
+                    return Path.GetDirectoryName(misPath) + assetPath.Substring(1);
+                default:
+                    return assetPath;
+            }
+        }
+
+        TSObject ProcessObject(TSParser.Object_declContext objectDecl)
+        {
+            var obj = ScriptableObject.CreateInstance<TSObject>();
+
+            obj.ClassName = objectDecl.class_name_expr().GetText();
+            obj.Name = objectDecl.object_name().GetText();
+
+            var block = objectDecl.object_declare_block();
+            if (block == null)
+                return obj;
+
+            foreach (var assignList in block.slot_assign_list())
+            {
+                foreach (var slot in assignList.slot_assign())
+                {
+                    var key = slot.children[0].GetText().ToLower();
+                    var value = slot.expr().GetText();
+
+                    var str = slot.expr().STRATOM();
+                    if (str != null)
+                        value = str.GetText().Substring(1, value.Length - 2);
+
+                    // Torque allows duplicate keys; last one wins
+                    if (obj.Fields.ContainsKey(key))
+                        obj.Fields[key] = value;
+                    else
+                        obj.Fields.Add(key, value);
+                }
+            }
+
+            foreach (var sub in block.object_decl_list())
+            {
+                foreach (var subDecl in sub.object_decl())
+                {
+                    var child = ProcessObject(subDecl);
+                    child.Parent = obj;
+                    obj.Children.Add(child);
+                }
+            }
+
+            return obj;
+        }
+    }
+}

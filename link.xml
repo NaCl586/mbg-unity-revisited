@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<linker>
+	<assembly fullname="ANTLR">
+		<type fullname="Antlr4.Runtime.Standard" preserve="all" />
+	</assembly>
+</linker>

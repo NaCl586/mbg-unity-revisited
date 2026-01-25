@@ -21,12 +21,19 @@ namespace TS
         public GameObject interiorPrefab;
         public GameObject movingPlatformPrefab;
         public GameObject triggerGoToTarget;
+        public GameObject inBoundsTrigger;
+        [Space]
+        public GameObject finishSignPrefab;
+        public GameObject gemPrefab;
+        [Space]
+        public GameObject antiGravityPrefab;
         [Space]
         public GameObject trapdoorPrefab;
 
         [Header("References")]
         public GameObject globalMarble;
         public GameObject startPad;
+        public GameObject finishPad;
 
         void Start()
         {
@@ -42,6 +49,8 @@ namespace TS
         {
             if (string.IsNullOrEmpty(MissionPath))
                 return;
+
+            string fileName = Path.GetFileNameWithoutExtension(Path.Combine(Application.streamingAssetsPath, MissionPath));
 
             var lexer = new TSLexer(
                 new AntlrFileStream(Path.Combine(Application.streamingAssetsPath, MissionPath))
@@ -73,8 +82,82 @@ namespace TS
 
             foreach (var obj in mission.RecursiveChildren())
             {
+                //Mission info
+                if(obj.ClassName == "ScriptObject" && obj.Name == "MissionInfo")
+                {
+                    int _time = -1;
+                    if (int.TryParse(obj.GetField("time"), out _time))
+                        if(_time != 0)
+                            GameManager.instance.time = _time;
+                        else
+                            GameManager.instance.time = -1;
+                    else
+                        GameManager.instance.time = -1;
+
+                    GameManager.instance.missionName = fileName;
+                    GameManager.instance.levelName = (obj.GetField("name"));
+                    GameManager.instance.description = (obj.GetField("desc"));
+                    GameManager.instance.startHelpText = (obj.GetField("startHelpText"));
+
+                    int _level = 0;
+                    if (int.TryParse(obj.GetField("level"), out _level))
+                        GameManager.instance.level = _level;
+                    else
+                        GameManager.instance.level = 0;
+
+                    GameManager.instance.artist = (obj.GetField("artist"));
+
+                    int _goldTime = -1;
+                    if (int.TryParse(obj.GetField("goldTime"), out _goldTime))
+                        GameManager.instance.goldTime = _goldTime;
+                    else
+                        GameManager.instance.goldTime = -1;
+
+                    int _ultimateTime = -1;
+                    if (int.TryParse(obj.GetField("ultimateTime"), out _ultimateTime))
+                        GameManager.instance.ultimateTime = _ultimateTime;
+                    else
+                        GameManager.instance.ultimateTime = -1;
+                }
+
+                //Gem
+                else if(obj.ClassName == "Item")
+                {
+                    string objectName = obj.GetField("dataBlock");
+                    
+                    if(objectName == "GemItem")
+                    {
+                        var gobj = Instantiate(gemPrefab, transform, false);
+                        gobj.name = "Gem";
+
+                        var position = ConvertPoint(ParseVectorString(obj.GetField("position")));
+                        var rotation = ConvertRotation(ParseVectorString(obj.GetField("rotation")));
+                        var scale = ConvertScale(ParseVectorString(obj.GetField("scale")));
+
+                        gobj.transform.localPosition = position;
+                        gobj.transform.localRotation = rotation;
+                        gobj.transform.localScale = scale;
+                    }
+
+                    else if (objectName == "AntiGravityItem")
+                    {
+                        var gobj = Instantiate(antiGravityPrefab, transform, false);
+                        gobj.name = "AntiGravityItem";
+
+                        var position = ConvertPoint(ParseVectorString(obj.GetField("position")));
+                        var rotation = ConvertRotation(ParseVectorString(obj.GetField("rotation")));
+                        var scale = ConvertScale(ParseVectorString(obj.GetField("scale")));
+
+                        var localScale = gobj.transform.localScale;
+
+                        gobj.transform.localPosition = position;
+                        gobj.transform.localRotation = rotation;
+                        gobj.transform.localScale = new Vector3(scale.x * localScale.x, scale.y * localScale.y, scale.z * localScale.z);
+                    }
+                }
+
                 //Interior
-                if (obj.ClassName == "InteriorInstance")
+                else if (obj.ClassName == "InteriorInstance")
                 {
                     var gobj = Instantiate(interiorPrefab, transform, false);
                     gobj.name = "InteriorInstance";
@@ -108,8 +191,31 @@ namespace TS
 
                         startPad.transform.localPosition = position;
                         startPad.transform.localRotation = rotation;
+                    }
 
-                        globalMarble.GetComponent<Marble>().Respawn();
+                    else if (objectName == "EndPad")
+                    {
+                        var position = ConvertPoint(ParseVectorString(obj.GetField("position")));
+                        var rotation = ConvertRotation(ParseVectorString(obj.GetField("rotation")));
+
+                        finishPad.transform.localPosition = position;
+                        finishPad.transform.localRotation = rotation;
+                    }
+
+                    else if (objectName == "SignFinish")
+                    {
+                        var gobj = Instantiate(finishSignPrefab, transform, false);
+                        gobj.name = "SignFinish";
+
+                        var position = ConvertPoint(ParseVectorString(obj.GetField("position")));
+                        var rotation = ConvertRotation(ParseVectorString(obj.GetField("rotation")));
+                        var scale = ConvertScale(ParseVectorString(obj.GetField("scale")));
+
+                        var localScale = gobj.transform.localScale;
+
+                        gobj.transform.localPosition = position;
+                        gobj.transform.localRotation = rotation;
+                        gobj.transform.localScale = new Vector3(scale.x * localScale.x, scale.y * localScale.y, scale.z * localScale.z);
                     }
 
                     else if (objectName.ToLower() == "trapdoor")
@@ -127,6 +233,27 @@ namespace TS
                                                                 scale.y * gobj.transform.localScale.y,
                                                                 scale.z * gobj.transform.localScale.z
                                                                 );
+                    }
+                }
+
+                else if (obj.ClassName == "Trigger")
+                {
+                    string objectName = obj.GetField("dataBlock");
+
+                    if(objectName == "InBoundsTrigger")
+                    {
+                        var ibtObj = Instantiate(inBoundsTrigger, transform, false);
+                        ibtObj.name = "InBoundsTrigger";
+
+                        var position = ConvertPoint(ParseVectorString(obj.GetField("position")));
+                        var rotation = ConvertRotation(ParseVectorString(obj.GetField("rotation")));
+                        var scale = ConvertScale(ParseVectorString(obj.GetField("scale")));
+
+                        var polyhedronScale = PolyhedronToBoxSize(ParseVectorString(obj.GetField("polyhedron")));
+
+                        ibtObj.transform.localPosition = position;
+                        ibtObj.transform.localRotation = rotation;
+                        ibtObj.transform.localScale = new Vector3(scale.x * polyhedronScale.z, scale.y * polyhedronScale.x, scale.z * polyhedronScale.y);
                     }
                 }
 
@@ -264,6 +391,9 @@ namespace TS
             }
 
             globalMarble.GetComponent<Movement>().GenerateMeshData();
+            GameManager.instance.InitGemCount();
+
+            Marble.onRespawn?.Invoke();
         }
 
 #if UNITY_EDITOR

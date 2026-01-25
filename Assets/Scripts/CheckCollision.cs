@@ -111,7 +111,7 @@ public class CheckCollision : MonoBehaviour
         }
     }
 
-    // ================= Manual Collision Event Methods =================
+    // Manual Collision Event Methods
     private void OnManualCollisionEnter(Collider collider, RaycastHit hit) => ApplyCollision(hit);
     private void OnManualCollisionStay(Collider collider, RaycastHit hit) { 
         ApplyCollision(hit);
@@ -124,6 +124,26 @@ public class CheckCollision : MonoBehaviour
     private void OnManualCollisionExit(Collider collider)
     {
         if (collisions.Count == 0) ClearCollisionState();
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        Gem g;
+        if (other.TryGetComponent<Gem>(out g))
+            g.PickupItem();
+
+        if (other.CompareTag("OutOfBounds"))
+            GameManager.onOutOfBounds?.Invoke();
+
+        if (other.CompareTag("Finish"))
+            GameManager.onFinish?.Invoke();
+
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("InBounds"))
+            GameManager.onOutOfBounds?.Invoke();
     }
 
     private void ClearCollisionState()
@@ -150,15 +170,14 @@ public class CheckCollision : MonoBehaviour
         movement.collidedTexture = ResolveTexture(hit, out detectedTextureName);
 
         FrictionSO frictionSO = FrictionManager.instance.SearchFriction(detectedTextureName);
+
         if (frictionSO)
             FrictionManager.instance.ApplyMaterial(frictionSO);
         else
             FrictionManager.instance.RevertMaterial();
-
-        
     }
 
-    // ================= Material Detection =================
+    // Material Detection
     private Texture ResolveTexture(RaycastHit hit, out string detectedTextureName)
     {
         detectedTextureName = string.Empty;

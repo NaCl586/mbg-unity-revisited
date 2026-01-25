@@ -16,9 +16,15 @@ public static class GravitySystem
 [RequireComponent(typeof(SphereCollider))]
 public class Movement : MonoBehaviour
 {
-	public bool canSpin = true;
-	public bool canMove = true;
-	public bool canJump = true;
+	//singleton
+	public static Movement instance;
+	public void Awake() => instance = this;
+
+	//constraint
+	[HideInInspector] public bool canSpin = true;
+	[HideInInspector] public bool canMove = true;
+	[HideInInspector] public bool canJump = true;
+	[HideInInspector] public bool freezeMovement = false;
 	[Space]
 	public float maxRollVelocity = 15f;
 	public float angularAcceleration = 75f;
@@ -120,6 +126,32 @@ public class Movement : MonoBehaviour
 		transform.position = newPos;
 	}
 
+	public void StopAllMovement()
+	{
+		marbleVelocity = Vector3.zero;
+		marbleAngularVelocity = Vector3.zero;
+	}
+
+	public void StopMoving()
+	{
+		canMove = false;
+		canSpin = true;
+		canJump = false;
+	}
+
+	public void StopAllbutJumping()
+	{
+		canMove = false;
+		canSpin = true;
+		canJump = true;
+	}
+
+	public void StartMoving()
+	{
+		canMove = true;
+		canSpin = true;
+		canJump = true;
+	}
 
 	void Start()
 	{
@@ -146,7 +178,8 @@ public class Movement : MonoBehaviour
 	public void GenerateMeshData()
 	{
 		foreach (var item in FindObjectsOfType<MeshCollider>())
-			colTests.Add(item);
+			if(!item.isTrigger)
+				colTests.Add(item);
 
 		foreach (var mesh in colTests)
 			GenerateMeshInfo(mesh);
@@ -176,7 +209,7 @@ public class Movement : MonoBehaviour
 			return;
 
 		// Detect canMove turning OFF
-		if (wasCanMove && !canMove)
+		if ((wasCanMove && !canMove) || !GameManager.gameStart)
 		{
 			lockedXZ = new Vector2(position.x, position.z);
 
@@ -194,7 +227,7 @@ public class Movement : MonoBehaviour
 		}
 
 		wasCanMove = canMove;
-
+		
 		float timeRemaining = Time.fixedDeltaTime;
 
 		const float STEP_SIZE = 0.004f;
@@ -223,7 +256,8 @@ public class Movement : MonoBehaviour
 				break;
 		} while (true);
 
-		transform.position = position;
+		if (!freezeMovement)
+			transform.position = position;
 
         if (canSpin)
         {

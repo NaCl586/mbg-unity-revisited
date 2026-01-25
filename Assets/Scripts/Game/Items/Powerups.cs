@@ -64,7 +64,8 @@ public class Powerups : MonoBehaviour
 
     private void FixedUpdate()
     {
-        transform.rotation = Quaternion.AngleAxis(Time.fixedDeltaTime * 120f, transform.rotation * Vector3.up) * transform.rotation;
+        var rot = transform.Find("Mesh").rotation;
+        transform.Find("Mesh").rotation = Quaternion.AngleAxis(Time.fixedDeltaTime * 120f, rot * Vector3.up) * rot;
 
         if (Time.time - timeDeactivated >= respawnTime && !this.isActive)
             Activate(true);

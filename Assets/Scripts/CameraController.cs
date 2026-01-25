@@ -6,7 +6,6 @@ using UnityEngine.Events;
 public class CameraController : MonoBehaviour
 {
     bool positionLocked = true;
-    public static bool gameFinish = false;
     float mouseX, mouseY;
 
     private Vector3 offset;
@@ -100,12 +99,12 @@ public class CameraController : MonoBehaviour
 
     void HandleLook()
     {
-        if (!gameFinish && Time.timeScale > 0.01f)
+        if (!GameManager.gameFinish && Time.timeScale > 0.01f)
         {
             mouseX = Input.GetAxis("Mouse X");
             mouseY = Input.GetAxis("Mouse Y");
         }
-        else if (gameFinish)
+        else if (GameManager.gameFinish)
         {
             float speed = Time.deltaTime * 10;
             mouseX = speed;
@@ -134,9 +133,7 @@ public class CameraController : MonoBehaviour
             offset = Quaternion.AngleAxis(-mouseY * 5f, right) * offset;
         }
 
-        // ─────────────────────────────────────────────
         // Camera collision code (unchanged)
-        // ─────────────────────────────────────────────
         Vector3 diff = -offset;
         Vector3 marblePos = marble.position;
 
@@ -187,7 +184,7 @@ public class CameraController : MonoBehaviour
                 break;
         }
 
-        if (positionLocked || gameFinish)
+        if (positionLocked || GameManager.gameFinish)
             transform.position = marble.position + diff;
 
         transform.LookAt(marble.position, up);

@@ -848,7 +848,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   frictions:
-  - {fileID: 11400000, guid: 2678da6db8ac07a41a6fc8d8664afe8c, type: 2}
   - {fileID: 11400000, guid: 7c376d57190d77b4aa7fe04f605d9082, type: 2}
   - {fileID: 11400000, guid: 4bd3b3fc5198f77488609f2ab68403f3, type: 2}
   - {fileID: 11400000, guid: 45bde35a947462b4da02b0c156eaaa38, type: 2}
@@ -1674,7 +1673,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9bec63c7e30a457f8c34d990a8eafdff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MissionPath: marble/data/missions/advanced/whorl.mis
+  MissionPath: marble/data/missions/advanced/slipslide.mis
   MissionObjects:
   - {fileID: 1650841305}
   interiorPrefab: {fileID: 6653497135140199419, guid: 3806fd2cf50ec474f88647ee66b42828,
@@ -2172,6 +2171,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 5790810143294497540, guid: 8d4d88a439a5fb5478c230a4be229f05,
+        type: 3}
+      propertyPath: m_Volume
+      value: 0.5
+      objectReference: {fileID: 0}
     - target: {fileID: 5790810143294497541, guid: 8d4d88a439a5fb5478c230a4be229f05,
         type: 3}
       propertyPath: m_LocalPosition.x

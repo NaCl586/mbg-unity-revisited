@@ -4,13 +4,27 @@ using UnityEngine;
 
 public class Bumper : MonoBehaviour
 {
+    public float bumperForce = 15f;
     public AudioClip bumperClip;
     public Animator anim;
 
-    public void CollisionEnter()
+    public Movement movement;
+
+    public void OnCollisionEnter(Collision collision)
     {
-        Movement.instance.bounce = 15;
-        GameManager.instance.PlayAudioClip(bumperClip);
-        anim.SetTrigger("Hit");
+        if (collision.gameObject.TryGetComponent<Movement>(out movement))
+        {
+            Vector3 n = collision.GetContact(0).normal.normalized;
+
+            // component of velocity along the normal
+            float normalComponent = Vector3.Dot(movement.marbleVelocity, n);
+
+            // remove it
+            movement.marbleVelocity -= normalComponent * n;
+            movement.marbleVelocity += n * bumperForce * 4f;
+
+            GameManager.instance.PlayAudioClip(bumperClip);
+            anim.SetTrigger("Hit");
+        }
     }
 }

@@ -603,7 +603,7 @@ namespace TS
 
                     else if (objectName.ToLower() == "trianglebumper")
                     {
-                        var gobj = Instantiate(roundBumperPrefab, transform, false);
+                        var gobj = Instantiate(triangleBumperPrefab, transform, false);
                         gobj.name = "TriangleBumper";
 
                         var position = ConvertPoint(ParseVectorString(obj.GetField("position")));

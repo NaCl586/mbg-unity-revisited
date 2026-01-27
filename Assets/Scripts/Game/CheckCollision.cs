@@ -120,10 +120,6 @@ public class CheckCollision : MonoBehaviour
         LandMine lm;
         if (hit.collider.TryGetComponent<LandMine>(out lm))
             lm.CollisionEnter();
-
-        Bumper b;
-        if (hit.collider.TryGetComponent<Bumper>(out b))
-            b.CollisionEnter();
     }
 
     private void OnManualCollisionStay(Collider collider, RaycastHit hit) { 

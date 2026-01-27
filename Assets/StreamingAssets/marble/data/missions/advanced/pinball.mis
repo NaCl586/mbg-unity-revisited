@@ -59,7 +59,7 @@ new SimGroup(MissionGroup) {
    new StaticShape(StartPoint) {
       position = "26 -14.9375 -10.0438";
       rotation = "-1 0 0 27.5";
-      scale = "0.5 0.5 0.5";
+      scale = "1 1 1";
       dataBlock = "StartPad";
    };
    new StaticShape(EndPoint) {

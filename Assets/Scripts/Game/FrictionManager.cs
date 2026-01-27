@@ -92,7 +92,6 @@ public class FrictionManager : MonoBehaviour
 
     public FrictionSO SearchFriction(string _name)
     {
-        Debug.Log(_name);
         if (string.IsNullOrEmpty(_name)) return null;
 
         foreach (var frictionSO in frictions)

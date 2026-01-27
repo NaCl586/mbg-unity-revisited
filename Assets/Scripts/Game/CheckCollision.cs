@@ -225,9 +225,6 @@ public class CheckCollision : MonoBehaviour
 
         FrictionSO frictionSO = FrictionManager.instance.SearchFriction(detectedTextureName);
 
-        if(frictionSO)
-            Debug.Log(frictionSO.name + " " + detectedTextureName);
-
         if (frictionSO)
             FrictionManager.instance.ApplyMaterial(frictionSO);
         else

@@ -61,7 +61,7 @@ public class CheckCollision : MonoBehaviour
 
     private void ManualCollisionCheck(Vector3 startPos, Vector3 movement)
     {
-        float radius = (sphereCollider.radius * Mathf.Max(transform.lossyScale.x, transform.lossyScale.y, transform.lossyScale.z)) + 0.05f;
+        float radius = (sphereCollider.radius * Mathf.Max(transform.lossyScale.x, transform.lossyScale.y, transform.lossyScale.z)) + 0.1f;
 
         // Ground check
         Vector3 origin = transform.position - Vector3.up * radius;

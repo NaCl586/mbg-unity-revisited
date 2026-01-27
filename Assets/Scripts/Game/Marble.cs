@@ -22,6 +22,8 @@ public class Marble : MonoBehaviour
     public GameObject gyrocopterBlades;
     public GameObject glowBounce;
 
+    public GameObject bounceParticle;
+
     private Movement movement;
     private Transform startPoint;
     public class OnRespawn : UnityEvent { };
@@ -225,5 +227,21 @@ public class Marble : MonoBehaviour
         GameManager.instance.timeTravelBonus = 0f;
         GameManager.instance.timeTravelActive = false;
         StopSound(PowerupType.TimeTravel);
+    }
+
+    public void BounceEmitter(float _speed, CollisionInfo _collisionInfo)
+    {
+        if (_speed > 3)
+        {
+            var effect = Instantiate(bounceParticle);
+            effect.transform.position = transform.position;
+
+            effect.transform.parent = _collisionInfo.collider.transform;
+
+            effect.transform.localScale = Vector3.one;
+            effect.transform.up = _collisionInfo.normal.normalized;
+
+            Destroy(effect.gameObject, effect.GetComponent<ParticleSystem>().main.duration + 1f);
+        }
     }
 }

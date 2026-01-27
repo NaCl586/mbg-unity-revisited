@@ -709,6 +709,8 @@ MonoBehaviour:
   TTActiveSound: {fileID: 6950228162549444764}
   gyrocopterBlades: {fileID: 2139781266}
   glowBounce: {fileID: 7833240111576956886}
+  bounceParticle: {fileID: 2747320370206154753, guid: 99e7300f735da1546ad1571b44ea5c84,
+    type: 3}
 --- !u!135 &623021664
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1672,7 +1674,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9bec63c7e30a457f8c34d990a8eafdff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MissionPath: marble/data/missions/advanced/darwin.mis
+  MissionPath: marble/data/missions/beginner/mine.mis
   MissionObjects:
   - {fileID: 1650841305}
   interiorPrefab: {fileID: 6653497135140199419, guid: 3806fd2cf50ec474f88647ee66b42828,
@@ -2481,7 +2483,7 @@ MonoBehaviour:
   gyroActiveTime: 0
   timeTravelStartTime: 0
   timeTravelBonus: 0
-  finishParticles: {fileID: 1000011945391522, guid: 78b71003e8b357d4bbf89c8b5e5e4f0e,
+  finishParticles: {fileID: 8285649748157849879, guid: e154bf5a1b0c7ad4a8468754518554b6,
     type: 3}
 --- !u!4 &1466247739
 Transform:
@@ -3756,6 +3758,54 @@ MonoBehaviour:
   Children: []
   ClassName: StaticShape
   Name: 
+--- !u!1 &2114899564
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2114899565}
+  - component: {fileID: 2114899566}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &2114899565
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2114899564}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -11.5265255, y: 2.7748537, z: 7.721033}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2114899566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2114899564}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbe67fe3f7e41af44b7be1f4edb6540a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  smokeAlphaMat: {fileID: 2100000, guid: d1d1730bfd9f4c8489e11baa6593f2ce, type: 2}
+  trailAlphaMat: {fileID: 2100000, guid: 966a8a6cd30acf64ca1aaa0562401ae5, type: 2}
+  redSparkAlphaMat: {fileID: 2100000, guid: f54d5dfd56b7cb24f9f633bbf7fdadca, type: 2}
+  blueSparkAlphaMat: {fileID: 2100000, guid: e85c2d4353e8df14bbbb3df2fd158558, type: 2}
 --- !u!1001 &2139781265
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -12600,3 +12650,4 @@ SceneRoots:
   - {fileID: 771273565941078715}
   - {fileID: 1340575518}
   - {fileID: 935205769}
+  - {fileID: 2114899565}

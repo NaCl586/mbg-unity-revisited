@@ -69,7 +69,7 @@ public class Powerups : MonoBehaviour
         }
     }
 
-    private void FixedUpdate()
+    protected void FixedUpdate()
     {
         
         if (rotateMesh)

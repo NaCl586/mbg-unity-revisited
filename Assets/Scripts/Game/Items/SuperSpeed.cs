@@ -10,8 +10,13 @@ public class SuperSpeed : Powerups
     public static OnUseSuperSpeed onUseSuperSpeed = new OnUseSuperSpeed();
     public static bool alreadyListened = false;
 
+    public GameObject particle;
+
+    GameObject psObj;
+
     public void Start()
     {
+        psObj = null;
         if (!alreadyListened)
         {
             alreadyListened = true;
@@ -19,9 +24,21 @@ public class SuperSpeed : Powerups
         }
     }
 
+    void FixedUpdate()
+    {
+        base.FixedUpdate();
+
+        if (psObj != null)
+            psObj.transform.position = Marble.instance.transform.position;
+    }
+
     protected override void UsePowerup()
     {
         GameManager.instance.PlayAudioClip(useSound);
+
+        psObj = Instantiate(particle);
+        psObj.GetComponent<ParticleSystem>().Play();
+        Destroy(psObj, psObj.GetComponent<ParticleSystem>().main.duration);
 
         Movement.instance.ApplySurfaceBoost(superSpeedMultiplier);
     }

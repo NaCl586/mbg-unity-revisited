@@ -211,6 +211,8 @@ MonoBehaviour:
   rotateMesh: 1
   showHelpOnPickup: 0
   superSpeedMultiplier: 25
+  particle: {fileID: 2672847094643925720, guid: fe5d48dd3d2cd5047a362dc680982005,
+    type: 3}
 --- !u!65 &5884555302335599540
 BoxCollider:
   m_ObjectHideFlags: 0

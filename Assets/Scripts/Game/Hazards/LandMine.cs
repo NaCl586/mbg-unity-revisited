@@ -46,12 +46,20 @@ public class LandMine : MonoBehaviour
             Movement.instance.marbleVelocity += dir * explosionStrength;
         }
 
-        Transform effect = Instantiate(explosionParticle, transform.position, Quaternion.Euler(90, 0, 0));
-        Destroy(effect.gameObject, effect.GetComponent<ParticleSystem>().main.duration);
+        var effect = Instantiate(explosionParticle);
+        effect.transform.position = transform.position;
+        effect.transform.localScale = Vector3.one * 8f;
+        Destroy(effect.gameObject, 3f);
+
+        Vector3 pos = transform.position;
+
+        Vector3 inheritedVel = Movement.instance != null
+            ? Movement.instance.marbleVelocity
+            : Vector3.zero;
+
         audioSource.PlayOneShot(explodeSfx);
 
         DeactivateLandMine();
-        //Invoke(nameof(DeactivateLandMine), Time.deltaTime + 0.1f);
     }
 
     float ComputeExplosionStrength(float r)

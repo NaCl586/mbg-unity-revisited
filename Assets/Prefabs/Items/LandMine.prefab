@@ -218,7 +218,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1268e851b342c1d4ebcfb507e8440eb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  explosionParticle: {fileID: 4388947112716342, guid: e1b08032bec16ba4eb1ae23cbd572664,
+  explosionParticle: {fileID: 4390670360909504431, guid: 25fe6cb88f75cf544b1cae4a4e9d51bb,
     type: 3}
   respawnTime: 7
   isActive: 1

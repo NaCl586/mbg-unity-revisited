@@ -12,6 +12,18 @@ public static class GravitySystem
 	public static Vector3 Gravity => GravityDir * GravityStrength;
 }
 
+[System.Serializable]
+public class CollisionInfo
+{
+	public Vector3 point;
+	public Vector3 normal;
+	public Vector3 velocity;
+	public Collider collider;
+	public float friction;
+	public float restitution;
+	public float contactDistance;
+}
+
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(SphereCollider))]
 public class Movement : MonoBehaviour
@@ -101,17 +113,7 @@ public class Movement : MonoBehaviour
 
 	private bool hasPosition = false;
 
-	[System.Serializable]
-	class CollisionInfo
-	{
-		public Vector3 point;
-		public Vector3 normal;
-		public Vector3 velocity;
-		public Collider collider;
-		public float friction;
-		public float restitution;
-		public float contactDistance;
-	}
+	
 
 	public void SetPosition(Vector3 newPos)
 	{
@@ -310,11 +312,10 @@ public class Movement : MonoBehaviour
 				var closest = Vector3.zero;
 				var contactNormal = Vector3.zero;
 				var res = CollisionHelpers.TriangleSphereIntersection(_p0, _p1, _p2, _normal, position, _radius, out closest, out contactNormal);
-				// var closest = Collision.ClosestPtPointTriangle(position, radius, v0, v, v2, surfacenormal);
+
 				if (res)
 				{
 					var contactDist = (closest - position).sqrMagnitude;
-					// Debug.drawTriangle(v0, v, v2);
 					if (contactDist <= _radius * _radius)
 					{
 						if (Vector3.Dot(position - closest, _normal) > 0)
@@ -336,6 +337,7 @@ public class Movement : MonoBehaviour
 							{
 								point = closest,
 								normal = contactNormal.normalized,
+								collider = _meshCollider,
 								contactDistance = Mathf.Sqrt(contactDist),
 								restitution = _meshCollider.sharedMaterial?.bounciness ?? 0.5f,
 								friction = _meshCollider.sharedMaterial?.dynamicFriction ?? 0.5f,
@@ -378,43 +380,6 @@ public class Movement : MonoBehaviour
 			data.lastRotation = t.rotation;
 			data.lastScale = t.lossyScale; // NEW
 		}
-	}
-
-
-	// Contact builder
-	void AddContact(
-	Collider _col,
-	Vector3 point,
-	Vector3 normal,
-	float penetration,
-	List<CollisionInfo> contacts,
-	MeshData mesh)
-	{
-		Vector3 colliderVelocity = Vector3.zero;
-
-		if (_col.attachedRigidbody != null)
-		{
-			colliderVelocity = _col.attachedRigidbody.GetPointVelocity(point);
-		}
-		else if (mesh != null)
-		{
-			colliderVelocity =
-				(mesh.collider.transform.position - mesh.lastPosition)
-				/ Time.fixedDeltaTime;
-		}
-
-		CollisionInfo newCollision = new CollisionInfo
-		{
-			point = point,
-			normal = normal.normalized,
-			// penetration = penetration,
-			restitution = _col.sharedMaterial?.bounciness ?? 0.5f,
-			friction = _col.sharedMaterial?.dynamicFriction ?? 0.5f,
-			velocity = colliderVelocity
-		};
-
-		contacts.Add(newCollision);
-		lastNormal = newCollision.normal;
 	}
 
 	void UpdateMove(ref float _dt, List<CollisionInfo> _contacts)
@@ -718,6 +683,8 @@ public class Movement : MonoBehaviour
 							var velocityAdd = surfaceVel * -(1 + restitution);
 							var vAtC = sVel + Vector3.Cross(marbleAngularVelocity, _contacts[i].normal * -marbleRadius);
 							var normalVel = -Vector3.Dot(_contacts[i].normal, sVel);
+
+							Marble.instance.BounceEmitter(sVel.magnitude * restitution, _contacts[i]);
 
 							vAtC -= _contacts[i].normal * Vector3.Dot(_contacts[i].normal, sVel);
 

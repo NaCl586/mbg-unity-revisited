@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -9,9 +9,14 @@ public class SuperJump : Powerups
     public class OnUseSuperJump : UnityEvent { };
     public static OnUseSuperJump onUseSuperJump = new OnUseSuperJump();
     public static bool alreadyListened = false;
+    [Space]
+    public GameObject particle;
+
+    GameObject psObj;
 
     public void Start()
     {
+        psObj = null;
         if (!alreadyListened)
         {
             alreadyListened = true;
@@ -19,9 +24,21 @@ public class SuperJump : Powerups
         }
     }
 
+    void FixedUpdate()
+    {
+        base.FixedUpdate();
+
+        if (psObj != null)
+            psObj.transform.position = Marble.instance.transform.position;
+    }
+
     protected override void UsePowerup()
     {
         GameManager.instance.PlayAudioClip(useSound);
+
+        psObj = Instantiate(particle);
+        psObj.GetComponent<ParticleSystem>().Play();
+        Destroy(psObj, psObj.GetComponent<ParticleSystem>().main.duration);
 
         Movement.instance.marbleVelocity += -GravitySystem.GravityDir.normalized * superJumpHeight;
     }

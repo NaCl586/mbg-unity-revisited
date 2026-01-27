@@ -227,7 +227,11 @@ MonoBehaviour:
   skinnedMeshRenderer: {fileID: 5186047847707935262}
   anim: {fileID: 0}
   isActive: 1
+  rotateMesh: 1
+  showHelpOnPickup: 0
   superJumpHeight: 20
+  particle: {fileID: 7648543407246419614, guid: f97f7f59a4fd4224ebe0bdfad2edc4a6,
+    type: 3}
 --- !u!1 &8919997291733581982
 GameObject:
   m_ObjectHideFlags: 0

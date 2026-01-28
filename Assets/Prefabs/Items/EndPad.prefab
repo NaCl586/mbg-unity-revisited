@@ -80,7 +80,7 @@ MonoBehaviour:
     - index: 1
       texture: {fileID: 2800000, guid: e5cb2c90a2df84d4fafa9fd1fd7acbdd, type: 3}
     - index: 2
-      texture: {fileID: 2800000, guid: 63ef8e4a2a3494a449dfa6177396dcf3, type: 3}
+      texture: {fileID: 2800000, guid: 9ccb0b99035664b458022131fa50a659, type: 3}
     frames: 15
 --- !u!33 &2295059311666977917
 MeshFilter:

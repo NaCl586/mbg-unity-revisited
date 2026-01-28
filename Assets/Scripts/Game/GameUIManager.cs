@@ -80,7 +80,7 @@ public class GameUIManager : MonoBehaviour
     {
         centerTextFade?.Kill();
 
-        _text = Utils.Resolve(_text);
+        _text = Utils.Resolve(_text).Replace("\\", "");
 
         centerText.color = Color.white;
         centerText.text = _text;
@@ -91,7 +91,7 @@ public class GameUIManager : MonoBehaviour
     {
         bottomTextFade?.Kill();
 
-        _text = Utils.Resolve(_text);
+        _text = Utils.Resolve(_text).Replace("\\", "");
 
         bottomText.color = Color.yellow;
         bottomText.text = _text;

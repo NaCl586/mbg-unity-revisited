@@ -60,7 +60,12 @@ public class PlayMissionManager : MonoBehaviour
 
     int selectedLevelNum;
     public static Type currentlySelectedType = Type.none;
-    
+
+    public void FixedUpdate()
+    {
+        if (Input.GetKeyDown(KeyCode.LeftArrow)) PrevButton();
+        if (Input.GetKeyDown(KeyCode.RightArrow)) NextButton();
+    }
 
     public void Start()
     {

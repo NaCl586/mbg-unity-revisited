@@ -51,7 +51,7 @@ public class Marble : MonoBehaviour
         startPoint = GameManager.instance.startPad.transform.Find("Spawn");
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         if (Input.GetKeyDown(KeyCode.R) && !GameManager.gameFinish)
         {
@@ -61,7 +61,7 @@ public class Marble : MonoBehaviour
                 GameManager.instance.RestartLevel();
         }
 
-        if (Input.GetKeyDown(ControlBinding.instance.usePowerup) && !GameManager.isPaused && !GameManager.gameFinish)
+        if (Input.GetKey(ControlBinding.instance.usePowerup) && !GameManager.isPaused && !GameManager.gameFinish)
             UsePowerup();
     }
 

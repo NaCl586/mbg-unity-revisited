@@ -57,6 +57,7 @@ namespace TS
         public GameObject globalMarble;
         public GameObject startPad;
         public GameObject finishPad;
+        public Light directionalLight;
 
         void Start()
         {
@@ -105,8 +106,20 @@ namespace TS
 
             foreach (var obj in mission.RecursiveChildren())
             {
+                if (obj.ClassName == "Sun")
+                {
+                    var direction = ConvertDirection(ParseVectorString(obj.GetField("direction")));
+                    var color = ConvertColor(ParseVectorString(obj.GetField("color")));
+                    var ambient = ConvertAmbient(ParseVectorString(obj.GetField("ambient")));
+
+                    directionalLight.transform.localRotation = direction;
+                    directionalLight.color = color;
+                    RenderSettings.ambientLight = ambient;
+                    directionalLight.intensity = ConvertIntensity(color, 1.15f);
+                }
+
                 //Gem
-                if (obj.ClassName == "Item")
+                else if (obj.ClassName == "Item")
                 {
                     string objectName = obj.GetField("dataBlock");
 
@@ -842,16 +855,77 @@ namespace TS
 
             ImportMission();
 
-            EditorSceneManager.MarkSceneDirty(gameObject.scene);
+/*            EditorSceneManager.MarkSceneDirty(gameObject.scene);
             EditorSceneManager.SaveScene(gameObject.scene);
 
-            Debug.Log("Mission imported and scene saved.");
+            Debug.Log("Mission imported and scene saved.");*/
         }
 #endif
 
         // -------------------------
         // Conversion helpers
         // -------------------------
+
+        Color ConvertColor(float[] torqueRGBA)
+        {
+            if (torqueRGBA == null || torqueRGBA.Length < 3)
+                return Color.white;
+
+            float r = torqueRGBA[0];
+            float g = torqueRGBA[1];
+            float b = torqueRGBA[2];
+            float a = torqueRGBA.Length > 3 ? torqueRGBA[3] : 1f;
+
+            float intensity = Mathf.Max(r, g, b);
+            if (intensity <= 0f)
+                intensity = 1f;
+
+            return new Color(r / intensity, g / intensity, b / intensity, a);
+        }
+
+        float ConvertIntensity(Color torqueColor, float intensityScale = 1.0f)
+        {
+            // Torque stores brightness in RGB
+            float intensity = Mathf.Max(
+                torqueColor.r,
+                torqueColor.g,
+                torqueColor.b
+            );
+
+            if (intensity <= 0f)
+                intensity = 1f;
+
+            return intensity * intensityScale;
+        }
+
+        Color ConvertAmbient(float[] torqueRGBA)
+        {
+            if (torqueRGBA == null || torqueRGBA.Length < 3)
+                return Color.black;
+
+            return new Color(
+                torqueRGBA[0],
+                torqueRGBA[1],
+                torqueRGBA[2],
+                1f
+            );
+        }
+
+        Quaternion ConvertDirection(float[] dir)
+        {
+            if (dir == null || dir.Length < 3)
+                return Quaternion.identity;
+
+            Vector3 torqueDirection = new Vector3(dir[0], dir[1], dir[2]);
+
+            if (torqueDirection == Vector3.zero)
+                return Quaternion.identity;
+
+            torqueDirection.Normalize();
+
+            // Unity directional lights shine along -forward
+            return Quaternion.LookRotation(-torqueDirection, Vector3.up);
+        }
 
         private Vector3 ConvertPoint(float[] p)
         {

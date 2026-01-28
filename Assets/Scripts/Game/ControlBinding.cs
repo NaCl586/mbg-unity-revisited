@@ -54,7 +54,7 @@ public class ControlBinding : MonoBehaviour
         freelookKey = KeyCode.Mouse1;
         mouseSensitivity = 1f;
         invertMouseYAxis = false;
-        alwaysFreeLook = false;
+        alwaysFreeLook = true;
     }
 
 }

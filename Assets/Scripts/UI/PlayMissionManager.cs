@@ -56,6 +56,7 @@ public class PlayMissionManager : MonoBehaviour
     public Button prev;
     public Button next;
     public Button play;
+    public Button home;
 
     int selectedLevelNum;
     public static Type currentlySelectedType = Type.none;
@@ -75,6 +76,8 @@ public class PlayMissionManager : MonoBehaviour
         intermediateButton.GetComponent<Button>().onClick.AddListener(() => LoadMissions(Type.intermediate));
         advancedButton.GetComponent<Button>().onClick.AddListener(() => LoadMissions(Type.advanced));
         customButton.GetComponent<Button>().onClick.AddListener(() => LoadMissions(Type.custom));
+
+        home.onClick.AddListener(() => SceneManager.LoadScene("MainMenu"));
 
         prev.onClick.AddListener(PrevButton);
         next.onClick.AddListener(NextButton);

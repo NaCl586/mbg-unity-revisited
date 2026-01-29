@@ -12,7 +12,7 @@ As the time of me writing this, the game has not been fully tested as I don't ha
 
 If you find bugs or things that are not faithful with the original Marble Blast Gold, feel free to message me on discord NaCl586#8479.
 
-Special thanks to Vani and RandomityGuy that I banged whenever I have problems when making this project.
+Special thanks to Vani and RandomityGuy for helping me whenever I have problems when making this project.
 
 ## Custom Level Support
 

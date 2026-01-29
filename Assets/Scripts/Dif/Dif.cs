@@ -18,14 +18,10 @@ public class Dif : MonoBehaviour {
 	public Material DefaultMaterial;
 
     [Header("Collision / Chunking")]
-    public int maxTrianglesPerChunk = 1500;
+    public int maxTrianglesPerChunk = 1000;
 
     public bool GenerateMesh(int interiorIndex)
     {
-        // Ensure MeshFilter and MeshRenderer exist
-        var meshFilter = gameObject.GetComponent<MeshFilter>();
-        var meshRenderer = gameObject.GetComponent<MeshRenderer>();
-
         // Load DIF resource
         var resource = DifResourceManager.getResource(Path.Combine(Application.streamingAssetsPath, filePath), interiorIndex);
 
@@ -51,40 +47,8 @@ public class Dif : MonoBehaviour {
             return false;
         }
 
-
         // Torque (Z-up) → Unity (Y-up)
         Quaternion torqueToUnity = Quaternion.Euler(90f, 0f, 0f);
-
-        // --- Render Mesh (visuals) ---
-        Mesh renderMesh = new Mesh();
-        renderMesh.name = Path.GetFileNameWithoutExtension(filePath);
-
-        renderMesh.vertices = resource.vertices
-            .Select(p => torqueToUnity * new Vector3(p.x, -p.y, p.z))
-            .ToArray();
-
-        renderMesh.normals = resource.normals
-            .Select(n => torqueToUnity * new Vector3(n.x, -n.y, n.z))
-            .ToArray();
-
-        renderMesh.uv = resource.uvs;
-
-        renderMesh.tangents = resource.tangents
-            .Select(t =>
-            {
-                Vector3 v = torqueToUnity * new Vector3(t.x, -t.y, t.z);
-                return new Vector4(v.x, v.y, v.z, t.w);
-            })
-            .ToArray();
-
-        renderMesh.subMeshCount = resource.triangleIndices.Length;
-        for (int i = 0; i < resource.triangleIndices.Length; i++)
-            renderMesh.SetTriangles(resource.triangleIndices[i], i);
-
-        renderMesh.RecalculateBounds();
-        meshFilter.mesh = renderMesh;
-
-        // ---------------- PHYSICS COLLISION (FINAL) ----------------
 
         // Remove any old colliders
         foreach (var c in GetComponents<MeshCollider>())
@@ -92,74 +56,48 @@ public class Dif : MonoBehaviour {
 
         int chunkIndex = 0;
 
-        List<int> triangleBuffer = new List<int>(maxTrianglesPerChunk * 3);
-
         for (int mat = 0; mat < resource.triangleIndices.Length; mat++)
         {
-            int[] tris = resource.triangleIndices[mat];
-            if (tris == null || tris.Length == 0)
+            int[] materialTris = resource.triangleIndices[mat];
+            if (materialTris == null || materialTris.Length == 0)
                 continue;
 
             string matName = resource.materials[mat];
+            Material material = ResolveMaterial(matName);
 
-            // OPTIONAL: skip decorative geometry
-            // if (IsDecorativeMaterial(matName))
-            //     continue;
+            List<int> triangleBuffer = new List<int>(maxTrianglesPerChunk * 3);
 
-            for (int i = 0; i < tris.Length; i += 3)
+            for (int i = 0; i < materialTris.Length; i += 3)
             {
-                // Add one triangle (3 indices)
-                triangleBuffer.Add(tris[i]);
-                triangleBuffer.Add(tris[i + 1]);
-                triangleBuffer.Add(tris[i + 2]);
+                triangleBuffer.Add(materialTris[i]);
+                triangleBuffer.Add(materialTris[i + 1]);
+                triangleBuffer.Add(materialTris[i + 2]);
 
-                // If chunk is full → emit GameObject
                 if (triangleBuffer.Count >= maxTrianglesPerChunk * 3)
                 {
                     CreateChunk(
                         chunkIndex++,
                         triangleBuffer.ToArray(),
                         torqueToUnity,
-                        resource
+                        resource,
+                        material
                     );
-
                     triangleBuffer.Clear();
                 }
             }
-        }
 
-        // Flush remainder
-        if (triangleBuffer.Count > 0)
-        {
-            CreateChunk(
-                chunkIndex++,
-                triangleBuffer.ToArray(),
-                torqueToUnity,
-                resource
-            );
-        }
-
-
-
-        // --- Materials ---
-        Material[] materials = new Material[resource.triangleIndices.Length];
-        for (int i = 0; i < materials.Length; i++)
-        {
-            var materialPath = ResolveTexturePath(resource.materials[i]);
-            materials[i] = DefaultMaterial;
-
-            if (File.Exists(materialPath))
+            // Flush remainder
+            if (triangleBuffer.Count > 0)
             {
-                var tex = new Texture2D(2, 2);
-                tex.LoadImage(File.ReadAllBytes(materialPath));
-
-                materials[i] = Instantiate(DefaultMaterial);
-                materials[i].mainTexture = tex;
-                materials[i].name = resource.materials[i];
+                CreateChunk(
+                    chunkIndex++,
+                    triangleBuffer.ToArray(),
+                    torqueToUnity,
+                    resource,
+                    material
+                );
             }
         }
-        meshRenderer.materials = materials;
-
         return true;
     }
 
@@ -167,7 +105,8 @@ public class Dif : MonoBehaviour {
     int index,
     int[] tris,
     Quaternion torqueToUnity,
-    DifResource resource
+    DifResource resource,
+    Material material
 )
     {
         GameObject chunk = new GameObject($"DIF_Chunk_{index}");
@@ -194,6 +133,7 @@ public class Dif : MonoBehaviour {
         var mr = chunk.AddComponent<MeshRenderer>();
 
         mf.sharedMesh = mesh;
+        mr.sharedMaterial = material; // ✅ CORRECT MATERIAL
 
         // --- Physics mesh ---
         Mesh physicsMesh = Instantiate(mesh);
@@ -206,6 +146,7 @@ public class Dif : MonoBehaviour {
         mc.sharedMesh = physicsMesh;
         mc.convex = false;
     }
+
 
 
     Material ResolveMaterial(string materialName)

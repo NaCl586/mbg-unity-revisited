@@ -17,7 +17,6 @@ public class Marble : MonoBehaviour
     [SerializeField] AudioSource useSuperBounceSound;
     [SerializeField] AudioSource gyroSound;
     [SerializeField] AudioSource TTActiveSound;
-    bool audioRollPlay = false;
 
     //things that stick to the marble
     public GameObject gyrocopterBlades;

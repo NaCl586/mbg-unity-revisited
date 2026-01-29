@@ -223,29 +223,56 @@ public class CameraController : MonoBehaviour
 
     IEnumerator PanCamera()
     {
-        float speed = Time.deltaTime * 20;
+        float speed = 30f;     // deg/sec
+        float limit = 25f;
+        float deadZone = 1.5f;
 
-        if (transform.rotation.eulerAngles.x < 25 || transform.rotation.eulerAngles.x > 265)
+        while (true)
         {
-            while (true)
+            float pitch = GetGravityRelativePitch(GravitySystem.GravityDir);
+
+            if (pitch < limit - deadZone)
             {
-                mouseY = -speed;
-                yield return new WaitForFixedUpdate();
-                if (!(transform.rotation.eulerAngles.x < 25 || transform.rotation.eulerAngles.x > 265))
-                    break;
+                mouseY = -speed * Time.fixedDeltaTime;
             }
-        }
-        else if (transform.rotation.eulerAngles.x > 25 && transform.rotation.eulerAngles.x < 95)
-        {
-            while (true)
+            else if (pitch > limit + deadZone)
             {
-                mouseY = +speed;
-                yield return new WaitForFixedUpdate();
-                if (!(transform.rotation.eulerAngles.x > 25 && transform.rotation.eulerAngles.x < 95))
-                    break;
+                mouseY = +speed * Time.fixedDeltaTime;
             }
+            else
+            {
+                break; // inside stable band
+            }
+
+            yield return new WaitForFixedUpdate();
         }
 
-        mouseY = 0;
+        mouseY = 0f;
     }
+
+
+    float GetGravityRelativePitch(Vector3 gravity)
+    {
+        Vector3 up = -gravity.normalized;
+
+        // Camera pitch axis
+        Vector3 right = transform.right;
+
+        // True forward
+        Vector3 forward = transform.forward;
+
+        // Forward flattened onto gravity plane (the "horizon")
+        Vector3 flatForward = Vector3.ProjectOnPlane(forward, up).normalized;
+
+        // Signed pitch angle around the camera's right axis
+        float angle = Vector3.SignedAngle(
+            flatForward,
+            forward,
+            right
+        );
+
+        return angle;
+    }
+
+
 }

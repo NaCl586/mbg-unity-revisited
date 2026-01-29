@@ -316,7 +316,7 @@ public class GameManager : MonoBehaviour
         gameFinish = false;
         Movement.instance.freezeMovement = false;
 
-        GravityModifier.onResetGravity?.Invoke();
+        GravityModifier.ResetGravityGlobal();
         CameraController.instance?.ResetCam();
 
         CameraController.instance.LockCamera(true);

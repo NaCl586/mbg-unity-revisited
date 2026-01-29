@@ -1,48 +1,58 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using DG.Tweening;
 using UnityEngine.Events;
 
 public class GravityModifier : Powerups
 {
+    public class OnResetGravity : UnityEvent { }
+    public static OnResetGravity onResetGravity = new OnResetGravity();
+
+    public class OnGravityChangedEvent : UnityEvent<Vector3, Vector3> { }
+    public static OnGravityChangedEvent onGravityChanged = new OnGravityChangedEvent();
+
     private static bool isRotating;
 
     [SerializeField] private GameObject upVectorFrom;
     [SerializeField] private GameObject upVectorTo;
-    private Vector3 upVector;
 
     [Header("Gravity Settings")]
     public float transitionTime = 0.5f;
 
+    private Vector3 upVector;
     private bool triggered;
-    public class OnResetGravity : UnityEvent { }
-    public static OnResetGravity onResetGravity = new OnResetGravity();
-    public class OnGravityChangedEvent : UnityEvent<Vector3, Vector3> { }
-    public static OnGravityChangedEvent onGravityChanged = new OnGravityChangedEvent();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    static void RegisterGlobalListeners()
+    {
+        // Ensure gravity can ALWAYS be reset
+        onResetGravity.RemoveAllListeners();
+        onResetGravity.AddListener(ResetGravityInternal);
+    }
 
     private void Start()
     {
-        onResetGravity.AddListener(ResetGravity);
-
         upVector = upVectorTo.transform.position - upVectorFrom.transform.position;
-
         isRotating = false;
+    }
+
+    public static void ResetGravityGlobal()
+    {
+        ResetGravityInternal();
+        onResetGravity?.Invoke();
+        onGravityChanged?.Invoke(Vector3.down, Vector3.down);
     }
 
     protected override void UsePowerup()
     {
-        if (triggered)
+        if (triggered || isRotating)
             return;
 
         ApplyGravity(upVector);
-
-        triggered = true;
     }
 
     void ApplyGravity(Vector3 targetDir)
     {
-        StopCoroutine("ApplyGravityCoroutine"); // cancel any ongoing gravity tween
+        StopAllCoroutines();
         StartCoroutine(ApplyGravityCoroutine(targetDir));
     }
 
@@ -51,12 +61,13 @@ public class GravityModifier : Powerups
         if (targetDir.sqrMagnitude < 0.001f)
             yield break;
 
+        isRotating = true;
+        triggered = true;
+
         targetDir.Normalize();
 
-        Vector3 startGravity = GravitySystem.GravityDir;
+        Vector3 startGravity = GravitySystem.GravityDir.normalized;
         float elapsed = 0f;
-
-        triggered = true;
 
         while (elapsed < transitionTime)
         {
@@ -66,18 +77,30 @@ public class GravityModifier : Powerups
             Vector3 newGravity = SafeLerp(startGravity, targetDir, t).normalized;
             GravitySystem.GravityDir = newGravity;
 
-            // Fire event each frame with current gravity
-            onGravityChanged.Invoke(startGravity, newGravity);
+            if (Marble.instance != null)
+                Marble.instance.gyrocopterBlades.transform.up = -newGravity;
 
+            onGravityChanged?.Invoke(startGravity, newGravity);
             yield return null;
         }
 
         GravitySystem.GravityDir = targetDir;
-        onGravityChanged.Invoke(startGravity, targetDir); // final exact value
 
+        onGravityChanged?.Invoke(startGravity, targetDir);
+
+        isRotating = false;
         triggered = false;
     }
 
+    static void ResetGravityInternal()
+    {
+        GravitySystem.GravityDir = Vector3.down;
+
+        if (Marble.instance != null)
+            Marble.instance.gyrocopterBlades.transform.up = Vector3.up;
+
+        isRotating = false;
+    }
 
     Vector3 SafeLerp(Vector3 start, Vector3 target, float t)
     {
@@ -86,33 +109,25 @@ public class GravityModifier : Powerups
 
         float dot = Vector3.Dot(start, target);
 
-        if (dot < -0.9999f) // nearly opposite
+        if (dot < -0.9999f)
         {
-            // Use camera forward as reference, but project it onto plane perpendicular to 'start'
-            Vector3 lookVector = Camera.main.transform.forward;
+            Vector3 lookVector = Camera.main != null
+                ? Camera.main.transform.forward
+                : Vector3.forward;
+
             Vector3 projected = lookVector - Vector3.Dot(lookVector, start) * start;
 
-            Vector3 intermediate = projected.normalized;
+            if (projected.sqrMagnitude < 1e-6f)
+                projected = Vector3.Cross(start, Vector3.right);
 
-            // Fallback if projection degenerates (camera forward ≈ start)
-            if (intermediate.sqrMagnitude < 1e-6f)
-                intermediate = Vector3.Cross(start, Vector3.right).normalized;
+            projected.Normalize();
 
-            // Two-phase lerp: start→intermediate, then intermediate→target
             if (t < 0.5f)
-                return Vector3.Lerp(start, intermediate, t * 2f).normalized;
+                return Vector3.Lerp(start, projected, t * 2f).normalized;
             else
-                return Vector3.Lerp(intermediate, target, (t - 0.5f) * 2f).normalized;
+                return Vector3.Lerp(projected, target, (t - 0.5f) * 2f).normalized;
         }
-        else
-        {
-            return Vector3.Lerp(start, target, t).normalized;
-        }
-    }
 
-    private void ResetGravity()
-    {
-        GravitySystem.GravityDir = Vector3.down;
-        onGravityChanged.Invoke(Vector3.down, Vector3.down);
+        return Vector3.Lerp(start, target, t).normalized;
     }
 }

@@ -221,7 +221,17 @@ public class PlayMissionManager : MonoBehaviour
         RefreshTMPLayout(levelDescriptionText);
 
         levelImage.color = Color.white;
-        levelImage.sprite = missions[number].levelImage;
+
+        if (missions[number].levelImage)
+        {
+            levelImage.sprite = missions[number].levelImage;
+            levelImage.color = Color.white;
+        }
+        else
+        {
+            levelImage.sprite = null;
+            levelImage.color = Color.clear;
+        }
 
         currentLevelText.text = CapitalizeFirst(currentlySelectedType.ToString()) + " Level " + (number + 1);
 

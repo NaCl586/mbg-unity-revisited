@@ -2,9 +2,9 @@
 new SimGroup(MissionGroup) {
 
    new ScriptObject(MissionInfo) {
-         type = "Custom";-
-         name = "Mission Template";-
-         level = "1";-
+         type = "Custom";
+         name = "Mission Template";
+         level = "1";
          goldTime = "0";
    };
    new MissionArea(MissionArea) {

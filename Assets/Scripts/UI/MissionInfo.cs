@@ -91,20 +91,27 @@ public class MissionInfo : MonoBehaviour
                 imagePath = jpgPath;
             else if (File.Exists(pngPath))
                 imagePath = pngPath;
+
+            Sprite sprite;
+            if (!string.IsNullOrEmpty(imagePath))
+            {
+                byte[] imageData = File.ReadAllBytes(imagePath);
+
+                Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                tex.LoadImage(imageData);
+
+                sprite = Sprite.Create(
+                    tex,
+                    new Rect(0, 0, tex.width, tex.height),
+                    new Vector2(0.5f, 0.5f),
+                    100f
+                );
+            }
             else
-                continue;
-
-            byte[] imageData = File.ReadAllBytes(imagePath);
-
-            Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            tex.LoadImage(imageData);
-
-            Sprite sprite = Sprite.Create(
-                tex,
-                new Rect(0, 0, tex.width, tex.height),
-                new Vector2(0.5f, 0.5f),
-                100f
-            );
+            {
+                sprite = null;
+            }
+            
 
             Mission newMission = new Mission
             {
@@ -183,7 +190,8 @@ public class MissionInfo : MonoBehaviour
                 }
             }
 
-            newMission.levelImage.name = levelName;
+            if(newMission.levelImage)
+                newMission.levelImage.name = levelName;
 
             if (difficulty == Type.beginner)
                 missionsBeginner.Add(newMission);

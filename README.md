@@ -14,6 +14,16 @@ If you find bugs or things that are not faithful with the original Marble Blast 
 
 Special thanks to Vani and RandomityGuy for helping me whenever I have problems when making this project.
 
+## Additional Controls
+
+Press R for quick respawn, works when the game is paused. This button currently is not remappable because I wanted to create the same UI remake without additional things. Also, setting video driver and color mode is just pure cosmetic and does not work.
+
+## Save Data
+
+<img src="https://i.imgur.com/u2wAziG.png" width="640">
+
+Save data uses [PlayerPrefs](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/PlayerPrefs.html), which can be accessed via Registry Editor (see picture). If you wanna unlock the levels, you can create a key or edit existing key called "QualifiedLevel[Difficulty]" to a large integer like 9999. The PlayerPrefs essentially is equivalent to prefs.cs in vanilla Marble Blast.
+
 ## Custom Level Support
 
 You can add custom levels that are specifically made for Marble Blast Gold by placing the mission file in Marble Blast_Data\StreamingAssets\marble\data\missions\custom and the interior file in Marble Blast_Data\StreamingAssets\marble\data\interiors (or wherever you put your .dif files when making the level). Adding new folders or custom levels that are not made for Marble Blast Gold do not work. You can technically add more levels to the main game with the same fashion. This feature is theoretically working but still untested.

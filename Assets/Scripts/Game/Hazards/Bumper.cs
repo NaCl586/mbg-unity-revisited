@@ -21,7 +21,7 @@ public class Bumper : MonoBehaviour
 
             // remove it
             movement.marbleVelocity -= normalComponent * n;
-            movement.marbleVelocity += n * bumperForce * 4f;
+            movement.marbleVelocity += n * bumperForce * 2f;
 
             GameManager.instance.PlayAudioClip(bumperClip);
             anim.SetTrigger("Hit");

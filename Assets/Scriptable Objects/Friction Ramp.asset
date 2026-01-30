@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Friction Ramp
   m_EditorClassIdentifier: 
   textures:
-  - {fileID: 2800000, guid: 2e211eee888f26f45964fe75a3da37e6, type: 3}
+  - {fileID: 2800000, guid: 4be4c9663cceac9418a8701b4f3b2a2c, type: 3}
   friction: 2
   restitution: 0.5
   bounce: -1

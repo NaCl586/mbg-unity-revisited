@@ -78,11 +78,11 @@ public class FrictionManager : MonoBehaviour
 
         if (frictionSO.friction != -1)
         {
-            movement.staticFriction = frictionSO.friction * 1.2f;
-            movement.kineticFriction = frictionSO.friction * 0.8f;
+            movement.staticFriction = frictionSO.friction * 1.1f;
+            movement.kineticFriction = frictionSO.friction * 0.7f;
 
-            defaultPhysicMaterial.staticFriction = frictionSO.friction * 1.2f;
-            defaultPhysicMaterial.dynamicFriction = frictionSO.friction * 0.8f;
+            defaultPhysicMaterial.staticFriction = frictionSO.friction * 1.1f;
+            defaultPhysicMaterial.dynamicFriction = frictionSO.friction * 0.7f;
         }
 
         if (frictionSO.restitution != -1)

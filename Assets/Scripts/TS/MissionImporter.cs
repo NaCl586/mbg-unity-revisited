@@ -837,20 +837,19 @@ namespace TS
             );
         }
 
-        Quaternion ConvertDirection(float[] dir)
+        Quaternion ConvertDirection(float[] torqueDir)
         {
-            if (dir == null || dir.Length < 3)
-                return Quaternion.identity;
+            // Torque Z-up → Unity Y-up
+            Vector3 unityDir = new Vector3(
+                torqueDir[0],
+                torqueDir[2],
+                torqueDir[1]
+            );
 
-            Vector3 torqueDirection = new Vector3(dir[0], dir[1], dir[2]);
-
-            if (torqueDirection == Vector3.zero)
-                return Quaternion.identity;
-
-            torqueDirection.Normalize();
+            unityDir.Normalize();
 
             // Unity directional lights shine along -forward
-            return Quaternion.LookRotation(-torqueDirection, Vector3.up);
+            return Quaternion.LookRotation(unityDir, Vector3.up);
         }
 
         private Vector3 ConvertPoint(float[] p)

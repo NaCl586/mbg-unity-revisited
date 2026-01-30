@@ -2216,42 +2216,42 @@ PrefabInstance:
     - target: {fileID: 136209974850031518, guid: 3f1d3f3ef37264c33ab8a76e916ef291,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.0014736652
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 136209974850031518, guid: 3f1d3f3ef37264c33ab8a76e916ef291,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 4.2107635
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 136209974850031518, guid: 3f1d3f3ef37264c33ab8a76e916ef291,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.5941477
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 136209974850031518, guid: 3f1d3f3ef37264c33ab8a76e916ef291,
         type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.9608955
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 136209974850031518, guid: 3f1d3f3ef37264c33ab8a76e916ef291,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.27691147
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 136209974850031518, guid: 3f1d3f3ef37264c33ab8a76e916ef291,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 136209974850031518, guid: 3f1d3f3ef37264c33ab8a76e916ef291,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 136209974850031518, guid: 3f1d3f3ef37264c33ab8a76e916ef291,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: 32.152
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 136209974850031518, guid: 3f1d3f3ef37264c33ab8a76e916ef291,
         type: 3}
@@ -2299,6 +2299,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: GameUI
       objectReference: {fileID: 0}
+    - target: {fileID: 2418494206847389436, guid: 90bfd7c6cf135de4bb2bd8a855d5ceec,
+        type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 8ecf55243a8a51e469b471eac95a1bff,
+        type: 3}
     - target: {fileID: 3542543756809530078, guid: 90bfd7c6cf135de4bb2bd8a855d5ceec,
         type: 3}
       propertyPath: m_Pivot.x
@@ -2762,7 +2768,7 @@ PrefabInstance:
     - target: {fileID: 2900114141589439554, guid: a6f3b40817226a742b5103de061cdd10,
         type: 3}
       propertyPath: MissionPath
-      value: marble/data/missions/intermediate/highroadlowroad.mis
+      value: marble/data/missions/intermediate/halfpipe.mis
       objectReference: {fileID: 0}
     - target: {fileID: 8324348759766913104, guid: a6f3b40817226a742b5103de061cdd10,
         type: 3}

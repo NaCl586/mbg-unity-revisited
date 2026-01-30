@@ -759,6 +759,9 @@ namespace TS
                         sequence.marker = markerInstance;
                         sequence.secondsToNext = (float)msToNext / 1000;
 
+                        if (seq >= markers.Count)
+                            seq = markers.Count - 1;
+
                         movingPlatform.sequenceNumbers[seq] = sequence;
                     }
 
@@ -926,6 +929,9 @@ namespace TS
 
             // --- Remove ALL backslashes ---
             assetPath = assetPath.Replace("\\", "");
+
+            if(assetPath.EndsWith("\""))
+                assetPath = assetPath.Substring(0, assetPath.Length - 1);
 
             return assetPath;
         }

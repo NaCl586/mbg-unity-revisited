@@ -41,6 +41,12 @@ public class LoadingManager : MonoBehaviour
 
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+            CancelLoading();
+    }
+
     public void CancelLoading()
     {
         SceneManager.LoadScene("PlayMission");

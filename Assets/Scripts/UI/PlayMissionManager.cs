@@ -46,6 +46,7 @@ public class PlayMissionManager : MonoBehaviour
     public TextMeshProUGUI levelDescriptionText;
     public TextMeshProUGUI bestTimesText;
     public TextMeshProUGUI currentLevelText;
+    public TextMeshProUGUI timeToQualifyText;
     public GameObject notQualifiedText;
     public GameObject notQualifiedImage;
     public GameObject beginnerButton;
@@ -216,6 +217,11 @@ public class PlayMissionManager : MonoBehaviour
 
         levelText.text = missions[number].levelName;
         levelDescriptionText.text = missions[number].description;
+
+        if (missions[number].time != -1)
+            timeToQualifyText.text = "Time to Qualify: " + Utils.FormatTime(missions[number].time);
+        else
+            timeToQualifyText.text = string.Empty;
 
         RefreshTMPLayout(levelText);
         RefreshTMPLayout(levelDescriptionText);

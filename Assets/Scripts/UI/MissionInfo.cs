@@ -256,6 +256,11 @@ public class MissionInfo : MonoBehaviour
             }
         }
 
+        for(int i = 0; i < sorted.Length; i++)
+        {
+            sorted[i].levelNumber = (i + 1);
+        }
+
         // Replace original list
         return sorted.ToList();
     }

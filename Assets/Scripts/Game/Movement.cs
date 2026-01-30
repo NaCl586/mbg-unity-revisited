@@ -953,6 +953,9 @@ public class Movement : MonoBehaviour
 
 	void UpdateRollSound(float contactPct, float _slipAmount) 
 	{
+		if (GameManager.gameFinish)
+			return;
+
 		Vector3 pos = transform.position;
 
 		AudioSource rollSound = Marble.instance.rollingSound;

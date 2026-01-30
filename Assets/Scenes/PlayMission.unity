@@ -1186,7 +1186,7 @@ PrefabInstance:
     - target: {fileID: 726010180165256344, guid: 7e97ac5490aa5d54884df4f56d4bf0b4,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 293.3
+      value: 295.5
       objectReference: {fileID: 0}
     - target: {fileID: 726010180165256344, guid: 7e97ac5490aa5d54884df4f56d4bf0b4,
         type: 3}
@@ -2977,7 +2977,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.000061035156}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: -0.0001373291}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1519295543
@@ -3402,7 +3402,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -3420,9 +3420,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0
+    y: 0.00006377697
     width: 1
-    height: 1
+    height: 0.99987245
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -3639,6 +3639,7 @@ MonoBehaviour:
   next: {fileID: 1074887549}
   play: {fileID: 932497199}
   home: {fileID: 232452298}
+  debug: 0
 --- !u!4 &1996103265
 Transform:
   m_ObjectHideFlags: 0

@@ -103,7 +103,7 @@ namespace TS
                     directionalLight.transform.localRotation = direction;
                     directionalLight.color = color;
                     RenderSettings.ambientLight = ambient;
-                    directionalLight.intensity = ConvertIntensity(color, 1.15f);
+                    directionalLight.intensity = ConvertIntensity(color, 0.25f);
                 }
 
                 //Gem
@@ -676,7 +676,7 @@ namespace TS
 
                         // Parse interiorIndex from mission file
                         indexStr = int.Parse(pathedInterior.GetField("interiorIndex"));
-                        dif.GenerateMesh(indexStr);
+                        dif.GenerateMovingPlatformMesh(indexStr);
 
                         movingPlatform = gobj.GetComponent<MovingPlatform>();
 
@@ -689,21 +689,19 @@ namespace TS
                         string initialTargetPosition = pathedInterior.GetField("initialTargetPosition");
                         if (initialTargetPosition != string.Empty)
                         {
-                            int itp = -1;
+                            int itp = 0;
                             if (int.TryParse(initialTargetPosition, out itp))
                             {
-                                if (itp == 0)
-                                {
+                                movingPlatform.initialTargetPosition = itp;
+                                if (itp >= 0)
                                     movingPlatform.movementMode = MovementMode.Triggered;
-                                }
                                 else
-                                {
                                     movingPlatform.movementMode = MovementMode.Constant;
-                                }
                             }
                         }
                         else
                         {
+                            movingPlatform.initialTargetPosition = 0;
                             movingPlatform.movementMode = MovementMode.Triggered;
                         }
                     }

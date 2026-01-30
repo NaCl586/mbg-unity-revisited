@@ -118,6 +118,9 @@ public class Marble : MonoBehaviour
 
     public void PlayBounceSound(float volume)
     {
+        if (GameManager.gameFinish) 
+            return;
+
         audioSource.volume = volume * PlayerPrefs.GetFloat("Audio_SoundVolume", 0.5f);
         audioSource.PlayOneShot(bounceSfx[Random.Range(0, bounceSfx.Length)]);
     }
@@ -226,6 +229,9 @@ public class Marble : MonoBehaviour
 
     public void BounceEmitter(float _speed, CollisionInfo _collisionInfo)
     {
+        if (GameManager.gameFinish)
+            return;
+
         if (_speed > 3)
         {
             var effect = Instantiate(bounceParticle);

@@ -44,7 +44,7 @@ public class SuperJump : Powerups
 
         psObj = Instantiate(particle);
         psObj.GetComponent<ParticleSystem>().Play();
-        Destroy(psObj, psObj.GetComponent<ParticleSystem>().main.duration);
+        Destroy(psObj, psObj.GetComponent<ParticleSystem>().main.duration + 1);
 
         Movement.instance.marbleVelocity += -GravitySystem.GravityDir.normalized * superJumpHeight;
     }

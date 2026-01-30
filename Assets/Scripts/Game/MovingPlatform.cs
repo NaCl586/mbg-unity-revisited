@@ -25,44 +25,38 @@ public class SequenceNumber
 [RequireComponent(typeof(Rigidbody))]
 public class MovingPlatform : MonoBehaviour
 {
-    // ─────────────────────────────────────────────
     // Inspector
-    // ─────────────────────────────────────────────
     public SmoothingType smoothing = SmoothingType.Linear;
     public MovementMode movementMode = MovementMode.Constant;
     public SequenceNumber[] sequenceNumbers;
+    public int initialTargetPosition;   // >=0 = marker, -1 = forward, -2 = backward
     public float initialPosition = 0f;
-    public float resolution = 0.1f; // for spline
+    public float resolution = 0.1f; // spline density
 
-    // ─────────────────────────────────────────────
-    // Internal state
-    // ─────────────────────────────────────────────
-    private Rigidbody rb;
+    // Internal
+    Rigidbody rb;
+    Vector3 basePos;
 
-    private Vector3[] positions;
+    Vector3[] positions;
 
-    // OPT: cached timing data
-    private float[] segmentStartTimes;
-    private float[] segmentInvDurations;
+    float[] segmentStartTimes;
+    float[] segmentInvDurations;
 
-    private float time;
-    private float targetTime;
-    private float totalTime;
-    private float maxReachableTime;
+    float time;
+    float targetTime;
+    float totalTime;
+    float maxReachableTime;
 
-    private int index;
-    private int initialIndex;
+    int index;
+    int initialIndex;
 
-    private float currentSegmentEnd;
-    private float initialSegmentEnd;
+    float currentSegmentEnd;
+    float initialSegmentEnd;
 
-    private Vector3 previousPosition;
+    Vector3 previousPosition;
     [HideInInspector] public Vector3 platformVelocity;
 
-    private Vector3 basePos;
-    private Quaternion initialRotation;
-
-    private SequenceNumber[] splineSequence;
+    SequenceNumber[] splineSequence;
 
     // ─────────────────────────────────────────────
     // Initialization
@@ -73,51 +67,18 @@ public class MovingPlatform : MonoBehaviour
         rb.isKinematic = true;
 
         basePos = transform.position;
-        initialRotation = transform.rotation;
 
         CacheMarkerPositions();
         GeneratePositions();
 
-        int count;
+        var seq = (smoothing == SmoothingType.Spline)
+            ? splineSequence
+            : sequenceNumbers;
 
-        if (smoothing == SmoothingType.Spline)
-        {
-            count = splineSequence.Length;
+        int count = seq.Length;
 
-            segmentStartTimes = new float[count];
-            segmentInvDurations = new float[count];
-
-            totalTime = 0f;
-            maxReachableTime = 0f;
-
-            for (int i = 0; i < count; i++)
-            {
-                segmentStartTimes[i] = totalTime;
-
-                float dt = splineSequence[i].secondsToNext;
-                segmentInvDurations[i] = dt > 0f ? 1f / dt : 0f;
-
-                totalTime += dt;
-
-                if (i < count - 1)
-                    maxReachableTime += dt;
-            }
-
-            time = Mathf.Clamp(initialPosition, 0f, maxReachableTime);
-            targetTime = time;
-
-            index = FindSegmentIndex(time);
-            previousPosition = basePos;
-            return;
-        }
-
-        count =
-            smoothing == SmoothingType.Spline
-            ? splineSequence.Length
-            : sequenceNumbers.Length;
-
-        // Ensure last marker has no segment
-        sequenceNumbers[count - 1].secondsToNext = 0f;
+        // Last marker has no outgoing segment
+        seq[count - 1].secondsToNext = 0f;
 
         segmentStartTimes = new float[count];
         segmentInvDurations = new float[count];
@@ -125,47 +86,54 @@ public class MovingPlatform : MonoBehaviour
         totalTime = 0f;
         maxReachableTime = 0f;
 
-        // Build timing cache
         for (int i = 0; i < count; i++)
         {
             segmentStartTimes[i] = totalTime;
 
-            float dt = sequenceNumbers[i].secondsToNext;
+            float dt = seq[i].secondsToNext;
             segmentInvDurations[i] = dt > 0f ? 1f / dt : 0f;
 
             totalTime += dt;
-
             if (i < count - 1)
                 maxReachableTime += dt;
         }
 
         time = Mathf.Clamp(initialPosition, 0f, maxReachableTime);
-        targetTime = time;
+        targetTime = ComputeTargetTime();
 
         index = FindSegmentIndex(time);
         initialIndex = index;
 
         currentSegmentEnd =
-            segmentStartTimes[index] + (smoothing == SmoothingType.Spline
-                                        ? splineSequence[index].secondsToNext
-                                        : sequenceNumbers[index].secondsToNext);
+            segmentStartTimes[index] + seq[index].secondsToNext;
 
         initialSegmentEnd = currentSegmentEnd;
 
-        previousPosition = basePos;
+        Vector3 startPos = basePos + positions[index];
+        rb.MovePosition(startPos);
+        previousPosition = startPos;
+
+        platformVelocity = Vector3.zero;
     }
 
     public void ResetMP()
     {
-        transform.rotation = initialRotation;
+        time = Mathf.Clamp(initialPosition, 0f, maxReachableTime);
+        targetTime = ComputeTargetTime();
 
-        index = initialIndex;
-        time = initialPosition;
-        targetTime = time;
-        currentSegmentEnd = initialSegmentEnd;
+        index = FindSegmentIndex(time);
 
-        rb.MovePosition(basePos);
-        previousPosition = basePos;
+        var seq = (smoothing == SmoothingType.Spline)
+            ? splineSequence
+            : sequenceNumbers;
+
+        currentSegmentEnd =
+            segmentStartTimes[index] + seq[index].secondsToNext;
+
+        Vector3 pos = basePos + positions[index];
+        rb.MovePosition(pos);
+        previousPosition = pos;
+
         platformVelocity = Vector3.zero;
     }
 
@@ -176,8 +144,26 @@ public class MovingPlatform : MonoBehaviour
     {
         if (movementMode == MovementMode.Triggered)
             targetTime = Mathf.Clamp(t, 0f, maxReachableTime);
-        else
-            targetTime = t;
+    }
+
+    float ComputeTargetTime()
+    {
+        if (initialTargetPosition < 0)
+            return -1f;
+
+        var seq = (smoothing == SmoothingType.Spline)
+            ? splineSequence
+            : sequenceNumbers;
+
+        int count = seq.Length;
+        int target = Mathf.Clamp(initialTargetPosition, 0, count);
+
+        float t = 0f;
+
+        for (int i = 0; i < target && i < count - 1; i++)
+            t += seq[i].secondsToNext;
+
+        return t;
     }
 
     // ─────────────────────────────────────────────
@@ -185,117 +171,80 @@ public class MovingPlatform : MonoBehaviour
     // ─────────────────────────────────────────────
     void FixedUpdate()
     {
-        float t;
-        Vector3 newPosition;
+        var seq = (smoothing == SmoothingType.Spline)
+            ? splineSequence
+            : sequenceNumbers;
 
-        if (smoothing == SmoothingType.Spline)
-        {
-            // Early-out for triggered
-            if (movementMode == MovementMode.Triggered &&
-                Mathf.Approximately(time, targetTime))
-            {
-                platformVelocity = Vector3.zero;
-                return;
-            }
-
-            // Advance time
-            if (movementMode == MovementMode.Triggered)
-                time = Mathf.MoveTowards(time, targetTime, Time.fixedDeltaTime);
-            else
-                time += Time.fixedDeltaTime;
-
-            // Loop
-            if (movementMode == MovementMode.Constant && time > totalTime)
-                time = 0f;
-
-            index = FindSegmentIndex(time);
-
-            if (index >= positions.Length - 1)
-                return;
-
-            t = (time - segmentStartTimes[index]) * segmentInvDurations[index];
-
-            newPosition =
-                basePos + Vector3.LerpUnclamped(
-                    positions[index],
-                    positions[index + 1],
-                    t
-                );
-
-            platformVelocity =
-                (newPosition - previousPosition) / Time.fixedDeltaTime;
-
-            previousPosition = newPosition;
-            rb.MovePosition(newPosition);
-            return;
-        }
-
-
-        // Early-out when triggered platform reached target
+        // Triggered early-out
         if (movementMode == MovementMode.Triggered &&
+            targetTime >= 0f &&
             Mathf.Approximately(time, targetTime))
         {
             platformVelocity = Vector3.zero;
             return;
         }
 
-        // Update time
+        // Advance time
         if (movementMode == MovementMode.Triggered)
         {
-            time = Mathf.MoveTowards(time, targetTime, Time.fixedDeltaTime);
+            if (targetTime >= 0f)
+                time = Mathf.MoveTowards(time, targetTime, Time.fixedDeltaTime);
         }
         else
         {
-            time += Time.fixedDeltaTime;
+            if (initialTargetPosition == -1)
+                time += Time.fixedDeltaTime;
+            else if (initialTargetPosition == -2)
+                time -= Time.fixedDeltaTime;
         }
 
-        // Looping for constant platforms
-        if (movementMode == MovementMode.Constant && time > totalTime)
+        // Loop
+        if (movementMode == MovementMode.Constant)
         {
-            time = 0f;
-            index = 0;
-            currentSegmentEnd =
-                segmentStartTimes[0] + sequenceNumbers[0].secondsToNext;
+            if (time > totalTime)
+                time = 0f;
+            else if (time < 0f)
+                time = totalTime;
         }
 
-        // OPT: single-step segment advance
-        if (index < positions.Length - 2 &&
-            time > currentSegmentEnd)
+        // Forward segment advance
+        while (index < seq.Length - 2 &&
+               time > segmentStartTimes[index] + seq[index].secondsToNext)
         {
             index++;
-            currentSegmentEnd += (smoothing == SmoothingType.Spline
-                        ? splineSequence[index].secondsToNext
-                        : sequenceNumbers[index].secondsToNext);
         }
 
-        // Safety: never interpolate past last valid segment
-        if (index >= positions.Length - 1)
+        // Backward segment advance
+        while (index > 0 &&
+               time < segmentStartTimes[index])
+        {
+            index--;
+        }
+
+        if (index >= seq.Length - 1)
         {
             platformVelocity = Vector3.zero;
             return;
         }
 
-        // Interpolation
-        t = (time - segmentStartTimes[index]) * segmentInvDurations[index];
+        float t =
+            (time - segmentStartTimes[index]) *
+            segmentInvDurations[index];
 
         if (smoothing == SmoothingType.Accelerate)
-        {
             t = 0.5f - 0.5f * Mathf.Cos(t * Mathf.PI);
-        }
 
-        newPosition =
+        Vector3 newPosition =
             basePos + Vector3.LerpUnclamped(
                 positions[index],
                 positions[index + 1],
                 t
             );
 
-        // Velocity tracking
         platformVelocity =
-            (newPosition - previousPosition) * (1f / Time.fixedDeltaTime);
+            (newPosition - previousPosition) / Time.fixedDeltaTime;
 
         previousPosition = newPosition;
-
         rb.MovePosition(newPosition);
     }
 
@@ -305,10 +254,9 @@ public class MovingPlatform : MonoBehaviour
     int FindSegmentIndex(float t)
     {
         for (int i = 0; i < segmentStartTimes.Length - 1; i++)
-        {
             if (t < segmentStartTimes[i + 1])
                 return i;
-        }
+
         return segmentStartTimes.Length - 2;
     }
 
@@ -323,35 +271,32 @@ public class MovingPlatform : MonoBehaviour
         if (smoothing != SmoothingType.Spline)
         {
             positions = new Vector3[sequenceNumbers.Length];
-            Vector3 firstMarkerPos = sequenceNumbers[0].markerPos;
+            Vector3 first = sequenceNumbers[0].markerPos;
 
             for (int i = 0; i < positions.Length; i++)
-                positions[i] = sequenceNumbers[i].markerPos - firstMarkerPos;
+                positions[i] = sequenceNumbers[i].markerPos - first;
 
             return;
         }
 
         List<SequenceNumber> seq = new List<SequenceNumber>();
-        Vector3 first = sequenceNumbers[0].markerPos;
+        Vector3 firstMarker = sequenceNumbers[0].markerPos;
 
         for (int i = 0; i < sequenceNumbers.Length - 1; i++)
         {
             GetCatmullRomSplineVectors(i, out var segment);
-
-            float stepTime =
-                sequenceNumbers[i].secondsToNext * resolution;
+            float step = sequenceNumbers[i].secondsToNext * resolution;
 
             foreach (var p in segment)
             {
                 seq.Add(new SequenceNumber
                 {
-                    markerPos = p + first,
-                    secondsToNext = stepTime
+                    markerPos = p + firstMarker,
+                    secondsToNext = step
                 });
             }
         }
 
-        // Final point
         seq.Add(new SequenceNumber
         {
             markerPos = sequenceNumbers[^1].markerPos,
@@ -362,37 +307,29 @@ public class MovingPlatform : MonoBehaviour
 
         positions = new Vector3[splineSequence.Length];
         for (int i = 0; i < positions.Length; i++)
-            positions[i] = splineSequence[i].markerPos - first;
+            positions[i] = splineSequence[i].markerPos - firstMarker;
     }
 
-
-
-    // ─────────────────────────────────────────────
-    // Spline helpers (unchanged)
-    // ─────────────────────────────────────────────
     void GetCatmullRomSplineVectors(int pos, out List<Vector3> segment)
     {
         segment = new List<Vector3>();
-        Vector3 firstMarkerPos = sequenceNumbers[0].markerPos;
 
-        Vector3 p0 =
-            sequenceNumbers[ClampListPos(pos - 1)].markerPos - firstMarkerPos;
-        Vector3 p1 =
-            sequenceNumbers[pos].markerPos - firstMarkerPos;
-        Vector3 p2 =
-            sequenceNumbers[ClampListPos(pos + 1)].markerPos - firstMarkerPos;
-        Vector3 p3 =
-            sequenceNumbers[ClampListPos(pos + 2)].markerPos - firstMarkerPos;
+        Vector3 first = sequenceNumbers[0].markerPos;
 
-        Vector3 lastPos = p1;
+        Vector3 p0 = sequenceNumbers[ClampListPos(pos - 1)].markerPos - first;
+        Vector3 p1 = sequenceNumbers[pos].markerPos - first;
+        Vector3 p2 = sequenceNumbers[ClampListPos(pos + 1)].markerPos - first;
+        Vector3 p3 = sequenceNumbers[ClampListPos(pos + 2)].markerPos - first;
+
+        Vector3 last = p1;
         int loops = Mathf.FloorToInt(1f / resolution);
 
         for (int i = 1; i <= loops; i++)
         {
             float t = i * resolution;
-            Vector3 newPos = GetCatmullRomPosition(t, p0, p1, p2, p3);
-            segment.Add(lastPos);
-            lastPos = newPos;
+            Vector3 next = GetCatmullRomPosition(t, p0, p1, p2, p3);
+            segment.Add(last);
+            last = next;
         }
     }
 

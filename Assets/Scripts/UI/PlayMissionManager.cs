@@ -57,6 +57,8 @@ public class PlayMissionManager : MonoBehaviour
     public Button next;
     public Button play;
     public Button home;
+    [Space]
+    public bool debug = false;
 
     int selectedLevelNum;
     public static Type currentlySelectedType = Type.none;
@@ -191,7 +193,10 @@ public class PlayMissionManager : MonoBehaviour
             return;
         }
 
-        int qualifiedLevel = PlayerPrefs.GetInt("QualifiedLevel" + CapitalizeFirst(currentlySelectedType.ToString()), 0);
+        int qualifiedLevel = debug ? 9999 : PlayerPrefs.GetInt("QualifiedLevel" + CapitalizeFirst(currentlySelectedType.ToString()), 0);
+
+        if (currentlySelectedType.ToString().ToLower().Equals("custom"))
+            qualifiedLevel = 9999;
 
         play.interactable = (qualifiedLevel >= number);
         prev.interactable = true;

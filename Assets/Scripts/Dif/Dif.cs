@@ -20,6 +20,108 @@ public class Dif : MonoBehaviour {
     [Header("Collision / Chunking")]
     public int maxTrianglesPerChunk = 1000;
 
+    public bool GenerateMovingPlatformMesh(int interiorIndex)
+    {
+        // Ensure MeshFilter and MeshRenderer exist
+        var meshFilter = gameObject.GetComponent<MeshFilter>() ?? gameObject.AddComponent<MeshFilter>();
+        var meshRenderer = gameObject.GetComponent<MeshRenderer>() ?? gameObject.AddComponent<MeshRenderer>();
+
+        // Load DIF resource
+        var resource = DifResourceManager.getResource(Path.Combine(Application.streamingAssetsPath, filePath), interiorIndex);
+
+        if (resource == null)
+        {
+            Debug.LogError("Dif decode failed");
+            return false;
+        }
+
+        if (resource.vertices == null ||
+            resource.normals == null ||
+            resource.tangents == null ||
+            resource.uvs == null)
+        {
+            Debug.LogError(
+                $"Invalid DIF resource\n" +
+                $"verts: {resource.vertices != null}\n" +
+                $"normals: {resource.normals != null}\n" +
+                $"tangents: {resource.tangents != null}\n" +
+                $"uvs: {resource.uvs != null}"
+            );
+
+            return false;
+        }
+
+
+        // Torque (Z-up) → Unity (Y-up)
+        Quaternion torqueToUnity = Quaternion.Euler(90f, 0f, 0f);
+
+        // --- Render Mesh (visuals) ---
+        Mesh renderMesh = new Mesh();
+        renderMesh.name = Path.GetFileNameWithoutExtension(filePath);
+
+        renderMesh.vertices = resource.vertices
+            .Select(p => torqueToUnity * new Vector3(p.x, -p.y, p.z))
+            .ToArray();
+
+        renderMesh.normals = resource.normals
+            .Select(n => torqueToUnity * new Vector3(n.x, -n.y, n.z))
+            .ToArray();
+
+        renderMesh.uv = resource.uvs;
+
+        renderMesh.tangents = resource.tangents
+            .Select(t =>
+            {
+                Vector3 v = torqueToUnity * new Vector3(t.x, -t.y, t.z);
+                return new Vector4(v.x, v.y, v.z, t.w);
+            })
+            .ToArray();
+
+        renderMesh.subMeshCount = resource.triangleIndices.Length;
+        for (int i = 0; i < resource.triangleIndices.Length; i++)
+            renderMesh.SetTriangles(resource.triangleIndices[i], i);
+
+        renderMesh.RecalculateBounds();
+        meshFilter.mesh = renderMesh;
+
+        // --- Physics Mesh (collider) ---
+        Mesh physicsMesh = new Mesh();
+        physicsMesh.vertices = renderMesh.vertices;
+        physicsMesh.triangles = renderMesh.triangles;
+
+        physicsMesh = WeldPhysicsMesh(physicsMesh, 0.0001f);
+        physicsMesh = FlatShadePhysicsMesh(physicsMesh);
+
+        physicsMesh.RecalculateNormals();
+        physicsMesh.RecalculateTangents();
+        physicsMesh.RecalculateBounds();
+
+        var meshCollider = gameObject.GetComponent<MeshCollider>() ?? gameObject.AddComponent<MeshCollider>();
+        meshCollider.sharedMesh = physicsMesh;
+        meshCollider.convex = false;
+
+        // --- Materials ---
+        Material[] materials = new Material[resource.triangleIndices.Length];
+        for (int i = 0; i < materials.Length; i++)
+        {
+            var materialPath = ResolveTexturePath(resource.materials[i]);
+            materials[i] = DefaultMaterial;
+
+            if (File.Exists(materialPath))
+            {
+                var tex = new Texture2D(2, 2);
+                tex.LoadImage(File.ReadAllBytes(materialPath));
+
+                materials[i] = Instantiate(DefaultMaterial);
+                materials[i].mainTexture = tex;
+                materials[i].name = resource.materials[i];
+            }
+        }
+        meshRenderer.materials = materials;
+
+        return true;
+    }
+
     public bool GenerateMesh(int interiorIndex)
     {
         // Load DIF resource

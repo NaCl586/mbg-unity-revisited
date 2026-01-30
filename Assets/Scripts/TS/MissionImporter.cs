@@ -293,7 +293,7 @@ namespace TS
                     gobj.transform.localRotation = rotation;
                     gobj.transform.localScale = scale;
 
-                    var difPath = ResolvePath(obj.GetField("interiorFile"), MissionInfo.instance.MissionPath);
+                    var difPath = ResolvePath(obj.GetField("interiorFile"));
                     var dif = gobj.GetComponent<Dif>();
                     dif.filePath = difPath;
 
@@ -669,7 +669,7 @@ namespace TS
                         gobj.transform.localScale = scale;
 
                         var resource = pathedInterior.GetField("interiorResource");
-                        var difPath = ResolvePath(resource, MissionInfo.instance.MissionPath);
+                        var difPath = ResolvePath(resource);
 
                         var dif = gobj.GetComponent<Dif>();
                         dif.filePath = difPath;
@@ -902,22 +902,15 @@ namespace TS
                 .ToArray();
         }
 
-        private string ResolvePath(string assetPath, string misPath)
+        private string ResolvePath(string assetPath)
         {
-            while (assetPath[0] == '/')
-                assetPath = assetPath.Substring(1);
+            assetPath = assetPath.TrimStart('/');
 
-            switch (assetPath[0])
-            {
-                case '~' when misPath.Contains('/'):
-                    return misPath.Substring(0, misPath.IndexOf('/')) + assetPath.Substring(1);
-                case '~':
-                    return assetPath.Substring(2);
-                case '.':
-                    return Path.GetDirectoryName(misPath) + assetPath.Substring(1);
-                default:
-                    return assetPath;
-            }
+            int slash = assetPath.IndexOf('/');
+            if (slash < 0)
+                return "marble/" + assetPath;
+
+            return "marble" + assetPath.Substring(slash);
         }
 
         public static TSObject ProcessObject(TSParser.Object_declContext objectDecl)

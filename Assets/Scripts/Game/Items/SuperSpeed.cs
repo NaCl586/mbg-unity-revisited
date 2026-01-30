@@ -44,7 +44,7 @@ public class SuperSpeed : Powerups
 
         psObj = Instantiate(particle);
         psObj.GetComponent<ParticleSystem>().Play();
-        Destroy(psObj, psObj.GetComponent<ParticleSystem>().main.duration + 1f);
+        Destroy(psObj, psObj.GetComponent<ParticleSystem>().main.duration + 5f);
 
         Movement.instance.ApplySurfaceBoost(superSpeedMultiplier);
     }

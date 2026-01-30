@@ -157,6 +157,8 @@ public class GameManager : MonoBehaviour
 
         nameInputField.onEndEdit.AddListener(UpdateName);
 
+        UpdateBestTimes();
+
         spawnAudioPlayed = false;
     }
 

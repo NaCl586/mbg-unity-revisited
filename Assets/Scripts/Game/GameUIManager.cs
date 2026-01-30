@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,6 +11,7 @@ public class GameUIManager : MonoBehaviour
     void Awake()
     {
         instance = this;
+        UpdateHUDMaterial();
     }
 
     [SerializeField] Sprite[] numbers;
@@ -30,6 +31,40 @@ public class GameUIManager : MonoBehaviour
 
     Tween centerTextFade;
     Tween bottomTextFade;
+
+    public void UpdateHUDMaterial()
+    {
+        int targetLayer = LayerMask.NameToLayer("HUD");
+        float smoothness01 = 1f;
+
+        GameObject[] allObjects = FindObjectsOfType<GameObject>();
+
+        for (int i = 0; i < allObjects.Length; i++)
+        {
+            if (allObjects[i].layer != targetLayer)
+                continue;
+
+            Renderer[] renderers = allObjects[i].GetComponentsInChildren<Renderer>(true);
+
+            for (int r = 0; r < renderers.Length; r++)
+            {
+                // This creates per-renderer material instances
+                Material[] mats = renderers[r].materials;
+
+                for (int m = 0; m < mats.Length; m++)
+                {
+                    Material mat = mats[m];
+                    if (mat == null) continue;
+
+                    if (mat.HasProperty("_Smoothness"))
+                        mat.SetFloat("_Smoothness", smoothness01);
+
+                    if (mat.HasProperty("_Glossiness"))
+                        mat.SetFloat("_Glossiness", smoothness01);
+                }
+            }
+        }
+    }
 
     public void ShowGemCountUI(bool _show)
     {

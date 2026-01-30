@@ -213,55 +213,56 @@ public class MissionInfo : MonoBehaviour
             missionsCustom = SortMissionsByLevelNumber(missionsCustom);
     }
 
-    public List<Mission> SortMissionsByLevelNumber(List<Mission> missions)
+    public static List<Mission> SortMissionsByLevelNumber(List<Mission> missions)
     {
-        if (missions.Count == 0)
-            return missions;
+        if (missions == null || missions.Count == 0)
+            return new List<Mission>();
 
-        int count = missions.Count;
+        int maxIndex = missions.Count - 1;
 
-        // New list with fixed size
-        Mission[] sorted = new Mission[count];
-        List<Mission> unsorted = new List<Mission>();
+        var sortable = missions
+            .Where(m => m != null)
+            .Select(m => new
+            {
+                Mission = m,
+                NormalizedLevel = Mathf.Clamp(m.levelNumber, 0, maxIndex)
+            })
+            .ToList();
 
-        foreach (var mission in missions)
+        // 🔥 IMPORTANT PART:
+        // levelNumber ASC
+        // levelName DESC (so later alphabet inserts first)
+        sortable.Sort((a, b) =>
         {
-            // Skip invalid level numbers
-            if (mission == null || mission.levelNumber < 1)
-            {
-                unsorted.Add(mission);
-                continue;
-            }
+            int numCompare = a.NormalizedLevel.CompareTo(b.NormalizedLevel);
+            if (numCompare != 0)
+                return numCompare;
 
-            int index = mission.levelNumber - 1;
+            return string.Compare(
+                b.Mission.levelName,
+                a.Mission.levelName,
+                StringComparison.OrdinalIgnoreCase
+            );
+        });
 
-            // Out of bounds or collision → treat as unsorted
-            if (index < 0 || index >= count || sorted[index] != null)
-            {
-                unsorted.Add(mission);
-                continue;
-            }
+        List<Mission> result = new List<Mission>();
 
-            sorted[index] = mission;
+        foreach (var entry in sortable)
+        {
+            int targetIndex = Mathf.Clamp(
+                entry.NormalizedLevel,
+                0,
+                result.Count
+            );
+
+            result.Insert(targetIndex, entry.Mission);
         }
 
-        // Fill empty slots with unsorted missions (original order preserved)
-        int unsortedIndex = 0;
-        for (int i = 0; i < sorted.Length; i++)
-        {
-            if (sorted[i] == null && unsortedIndex < unsorted.Count)
-            {
-                sorted[i] = unsorted[unsortedIndex];
-                unsortedIndex++;
-            }
-        }
+        for (int i = 0; i < result.Count; i++)
+            result[i].levelNumber = (i + 1);
 
-        for(int i = 0; i < sorted.Length; i++)
-        {
-            sorted[i].levelNumber = (i + 1);
-        }
-
-        // Replace original list
-        return sorted.ToList();
+        return result;
     }
+
+
 }

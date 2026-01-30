@@ -225,6 +225,7 @@ public class PlayMissionManager : MonoBehaviour
 
         RefreshTMPLayout(levelText);
         RefreshTMPLayout(levelDescriptionText);
+        RefreshTMPLayout(timeToQualifyText);
 
         levelImage.color = Color.white;
 

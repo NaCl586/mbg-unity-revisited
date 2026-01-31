@@ -23,8 +23,8 @@ RenderSettings:
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
-  m_AmbientIntensity: 1
-  m_AmbientMode: 0
+  m_AmbientIntensity: 0.4
+  m_AmbientMode: 3
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 2100000, guid: 820015bde8b4e6c44a4b49fc696862b2, type: 2}
   m_HaloStrength: 0.5
@@ -632,7 +632,7 @@ Light:
   m_Type: 1
   m_Shape: 0
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 0.251
+  m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.802082
@@ -1558,6 +1558,7 @@ MonoBehaviour:
   activeCheckpoint: {fileID: 0}
   audioSource: {fileID: 1466247740}
   timeTravelActive: 0
+  elapsedTime: 0
   currentGems: 0
   activePowerup: 0
   superBounceIsActive: 0
@@ -2698,7 +2699,7 @@ PrefabInstance:
     - target: {fileID: 2900114141589439554, guid: a6f3b40817226a742b5103de061cdd10,
         type: 3}
       propertyPath: MissionPath
-      value: marble/data/missions/advanced/kingofthemountain.mis
+      value: marble/data/missions/advanced/moebius.mis
       objectReference: {fileID: 0}
     - target: {fileID: 8324348759766913104, guid: a6f3b40817226a742b5103de061cdd10,
         type: 3}

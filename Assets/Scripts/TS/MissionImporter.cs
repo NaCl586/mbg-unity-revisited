@@ -91,9 +91,8 @@ namespace TS
                 return;
 
             var mission = MissionObjects[0];
-            var children = mission.GetFirstChildrens();
 
-            foreach (var obj in mission.GetFirstChildrens())
+            foreach (var obj in mission.RecursiveChildren())
             {
                 if (obj.ClassName == "Sun")
                 {

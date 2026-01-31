@@ -373,7 +373,10 @@ public class GameManager : MonoBehaviour
             mp.ResetMP();
 
         GameUIManager.instance.SetTimerText(elapsedTime);
-        GameUIManager.instance.SetCenterText(MissionInfo.instance.startHelpText);
+
+        string startHelpText = MissionInfo.instance.startHelpText;
+        if (!string.IsNullOrEmpty(startHelpText))
+            GameUIManager.instance.SetCenterText(startHelpText);
 
         if (finishParticleInstance)
             Destroy(finishParticleInstance);

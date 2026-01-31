@@ -34,7 +34,7 @@ namespace TS
 
         public string GetField(string field)
         {
-            return Fields.TryGetValue(field.ToLower(), out string value) ? value : "";
+            return Fields.TryGetValue(field.ToLower(), out string value) ? value : string.Empty;
         }
     }
 }

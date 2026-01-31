@@ -365,7 +365,7 @@ public class GameManager : MonoBehaviour
         GameUIManager.instance.SetTimerText(elapsedTime);
 
         string startHelpText = MissionInfo.instance.startHelpText;
-        if (!string.IsNullOrEmpty(startHelpText))
+        if(!string.IsNullOrEmpty(startHelpText))
             GameUIManager.instance.SetCenterText(startHelpText);
 
         if (finishParticleInstance)

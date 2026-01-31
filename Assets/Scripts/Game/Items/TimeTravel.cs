@@ -5,7 +5,7 @@ using UnityEngine.Events;
 
 public class TimeTravel : Powerups
 {
-    [SerializeField] float timeBonus = 5f; 
+    public float timeBonus = 5f; 
     public class OnGetTimeTravel : UnityEvent { };
     public static OnGetTimeTravel onGetTimeTravel = new OnGetTimeTravel();
 

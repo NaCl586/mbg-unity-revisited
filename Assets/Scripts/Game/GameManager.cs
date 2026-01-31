@@ -420,8 +420,9 @@ public class GameManager : MonoBehaviour
             startTimer = false;
             GameUIManager.instance.SetBottomText("Congratulations! You've finished!");
 
-            finishParticleInstance = Instantiate(finishParticles, finishPad.transform.GetChild(0).position, Quaternion.identity);
+            finishParticleInstance = Instantiate(finishParticles, finishPad.transform.Find("FinishParticle").position, Quaternion.identity);
             finishParticleInstance.transform.localScale = Vector3.one * 1.5f;
+            finishParticleInstance.transform.rotation = finishPad.transform.rotation;
 
             Marble.instance.InactivateTimeTravel();
 

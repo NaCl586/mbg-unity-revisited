@@ -276,6 +276,12 @@ namespace TS
                         gobj.transform.localPosition = position;
                         gobj.transform.localRotation = rotation;
                         gobj.transform.localScale = new Vector3(scale.x * localScale.x, scale.y * localScale.y, scale.z * localScale.z);
+
+                        string timeBonus = obj.GetField("timeBonus");
+                        if (timeBonus != string.Empty)
+                            gobj.GetComponent<TimeTravel>().timeBonus = (float)int.Parse(timeBonus) / 1000;
+                        else
+                            gobj.GetComponent<TimeTravel>().timeBonus = 5;
                     }
                 }
 

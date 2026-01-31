@@ -103,7 +103,7 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 1
   algorithm:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   minSmoothness:
     m_OverrideState: 0
@@ -116,13 +116,13 @@ MonoBehaviour:
     m_Value: 0
   thicknessMode:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0
   thickness:
     m_OverrideState: 1
-    m_Value: 0.25
+    m_Value: 1
   quality:
     m_OverrideState: 1
-    m_Value: 2
+    m_Value: 3
   maxStep:
     m_OverrideState: 0
     m_Value: 16

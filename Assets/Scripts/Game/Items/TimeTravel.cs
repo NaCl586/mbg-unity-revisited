@@ -12,7 +12,7 @@ public class TimeTravel : Powerups
     public void Start()
     {
         onGetTimeTravel.AddListener(UsePowerup);
-        bottomTextMsg = "You picked up a " + timeBonus.ToString("0.###") + " second Time Travel Bonus!";
+        bottomTextMsg = "You picked up a " + timeBonus + " second Time Travel Bonus!";
     }
 
     protected override void UsePowerup()

@@ -211,34 +211,13 @@ public class Marble : MonoBehaviour
 
     public void ActivateTimeTravel(float _timeBonus)
     {
+        if (!GameManager.instance.timeTravelActive)
+        {
+            GameManager.instance.timeTravelStartTime = Time.time;
+            GameManager.instance.timeTravelActive = true;
+        }
+        GameManager.instance.timeTravelBonus += _timeBonus;
         PlaySound(PowerupType.TimeTravel);
-
-        if(_timeBonus > 0)
-        {
-            if (!GameManager.instance.timeTravelActive)
-            {
-                GameManager.instance.timeTravelStartTime = Time.time;
-                GameManager.instance.timeTravelActive = true;
-            }
-            GameManager.instance.timeTravelBonus += _timeBonus;
-        }
-        else
-        {
-            if (GameManager.instance.timeTravelActive)
-            {
-                GameManager.instance.timeTravelBonus -= _timeBonus;
-                if (GameManager.instance.timeTravelBonus < 0)
-                {
-                    GameManager.instance.elapsedTime -= GameManager.instance.timeTravelBonus * 1000f;
-                    GameManager.instance.timeTravelBonus = 0;
-                }
-            }
-            else
-            {
-                GameManager.instance.elapsedTime += _timeBonus * 1000f;
-            }
-        }
-        
     }
 
     public void InactivateTimeTravel()

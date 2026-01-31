@@ -94,7 +94,7 @@ public class GameManager : MonoBehaviour
 
     bool startTimer;
     [HideInInspector] public bool timeTravelActive;
-    [HideInInspector] public float elapsedTime;
+    float elapsedTime;
     float bonusTime;
     string bestTimeName = string.Empty;
 
@@ -212,18 +212,8 @@ public class GameManager : MonoBehaviour
         if (timeTravelActive)
         {
             bonusTime += Time.deltaTime * 1000f;
-
-            float elapsed = Time.time - timeTravelStartTime;
-
-            if (elapsed >= timeTravelBonus)
-            {
-                float overshoot = elapsed - timeTravelBonus;
-
-                // bonusTime is scaled by *1000f, so convert overshoot the same way
-                bonusTime -= overshoot * 1000f;
-
+            if (Time.time - timeTravelStartTime >= timeTravelBonus)
                 Marble.instance.InactivateTimeTravel();
-            }
         }
 
         //pause

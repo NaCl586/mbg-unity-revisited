@@ -25,6 +25,13 @@ namespace TS
             }
         }
 
+        public IEnumerable<TSObject> GetFirstChildrens()
+        {
+            // Shallow traversal ONLY
+            foreach (var child in Children)
+                yield return child;
+        }
+
         public string GetField(string field)
         {
             return Fields.TryGetValue(field.ToLower(), out string value) ? value : "";

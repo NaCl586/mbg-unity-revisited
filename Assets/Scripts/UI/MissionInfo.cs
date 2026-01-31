@@ -14,7 +14,7 @@ public class MissionInfo : MonoBehaviour
     public static MissionInfo instance;
     public void Awake()
     {
-        if(instance == null)
+        if (instance == null)
         {
             instance = this;
             DontDestroyOnLoad(gameObject);
@@ -63,7 +63,7 @@ public class MissionInfo : MonoBehaviour
     {
         string basePath = Path.Combine(
             Application.streamingAssetsPath,
-            "marble/data/missions",
+            "marble/data/missions/",
             difficulty.ToString()
         );
 
@@ -111,7 +111,7 @@ public class MissionInfo : MonoBehaviour
             {
                 sprite = null;
             }
-            
+
 
             Mission newMission = new Mission
             {
@@ -147,7 +147,7 @@ public class MissionInfo : MonoBehaviour
                 return;
 
             var mission = MissionObjects[0];
-            foreach (var obj in mission.RecursiveChildren())
+            foreach (var obj in mission.GetFirstChildrens())
             {
                 //Mission info
                 if (obj.ClassName == "ScriptObject" && obj.Name == "MissionInfo")
@@ -164,7 +164,10 @@ public class MissionInfo : MonoBehaviour
                     newMission.missionName = levelName.Replace("\\", "");
                     newMission.levelName = (obj.GetField("name").Replace("\\", ""));
                     newMission.description = (obj.GetField("desc").Replace("\\", ""));
-                    newMission.startHelpText = (obj.GetField("startHelpText").Replace("\\", ""));
+
+                    string startHelpText = obj.GetField("startHelpText");
+                    if (!string.IsNullOrEmpty(startHelpText))
+                        newMission.startHelpText = startHelpText.Replace("\\", "");
 
                     int _level = 0;
                     if (int.TryParse(obj.GetField("level"), out _level))
@@ -190,7 +193,7 @@ public class MissionInfo : MonoBehaviour
                 }
             }
 
-            if(newMission.levelImage)
+            if (newMission.levelImage)
                 newMission.levelImage.name = levelName;
 
             if (difficulty == Type.beginner)

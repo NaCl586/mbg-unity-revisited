@@ -21,6 +21,7 @@ public class CollisionInfo
 	public Collider collider;
 	public float friction;
 	public float restitution;
+	public float bounce;
 	public float contactDistance;
 }
 
@@ -61,7 +62,7 @@ public class Movement : MonoBehaviour
 	{
 		Vector2 movement = fakeInput;
 		if (canSpin)
-        {
+		{
 			if (Input.GetKey(ControlBinding.instance.moveForward)) movement.y = 1f;
 			if (Input.GetKey(ControlBinding.instance.moveBackward)) movement.y = -1f;
 			if (Input.GetKey(ControlBinding.instance.moveRight)) movement.x = 1f;
@@ -180,7 +181,7 @@ public class Movement : MonoBehaviour
 			transform.lossyScale.x,
 			transform.lossyScale.y,
 			transform.lossyScale.z
-		);	
+		);
 	}
 
 	public void GenerateMeshData()
@@ -189,7 +190,7 @@ public class Movement : MonoBehaviour
 		meshes = new List<MeshData>();
 
 		foreach (var item in FindObjectsOfType<MeshCollider>())
-        {
+		{
 			if (!item.isTrigger)
 				colTests.Add(item);
 		}
@@ -240,7 +241,7 @@ public class Movement : MonoBehaviour
 		}
 
 		wasCanMove = canMove;
-		
+
 		float timeRemaining = Time.fixedDeltaTime;
 
 		const float STEP_SIZE = 0.008f;
@@ -349,6 +350,7 @@ public class Movement : MonoBehaviour
 								contactDistance = Mathf.Sqrt(contactDist),
 								restitution = _meshCollider.gameObject.GetComponent<FrictionComponent>()?.restitution ?? 1.0f,
 								friction = _meshCollider.gameObject.GetComponent<FrictionComponent>()?.friction ?? 1.0f,
+								bounce = _meshCollider.gameObject.GetComponent<FrictionComponent>()?.bounce ?? 0.0f,
 								velocity = colliderVelocity
 							};
 
@@ -811,8 +813,8 @@ public class Movement : MonoBehaviour
 		}
 
 		//bouncy floor
-		if (contacts.Count > 0 && bounce > 0)
-        {
+		if (contacts.Count > 0 && contacts[0].bounce > 0)
+		{
 			Vector3 n = contacts[0].normal.normalized;
 
 			// component of velocity along the normal
@@ -820,9 +822,9 @@ public class Movement : MonoBehaviour
 
 			// remove it
 			marbleVelocity -= normalComponent * n;
-			marbleVelocity += n * bounce;
+			marbleVelocity += n * contacts[0].bounce;
 			return;
-        }
+		}
 
 		bool _canJump = bestSurface != -1;
 		if (_canJump && Jump && canJump)
@@ -831,7 +833,7 @@ public class Movement : MonoBehaviour
 
 			// Wall or ceiling → no jump
 			if (upDot >= 0.1f)
-            {
+			{
 				Vector3 velDifference = marbleVelocity - bestContact.velocity;
 				float sv = Vector3.Dot(bestContact.normal, velDifference);
 
@@ -855,8 +857,6 @@ public class Movement : MonoBehaviour
 		}
 		if (bestSurface != -1)
 		{
-			
-
 			Vector3 vAtC = marbleVelocity + (Vector3.Cross(marbleAngularVelocity, -bestContact.normal * marbleRadius)) - bestContact.velocity;
 
 			float rawSlip = vAtC.magnitude / maxRollVelocity;
@@ -951,7 +951,7 @@ public class Movement : MonoBehaviour
 		marbleVelocity += movementVector * strength;
 	}
 
-	void UpdateRollSound(float contactPct, float _slipAmount) 
+	void UpdateRollSound(float contactPct, float _slipAmount)
 	{
 		Vector3 pos = transform.position;
 
@@ -988,7 +988,7 @@ public class Movement : MonoBehaviour
 			if (slipVolume > 1f)
 				slipVolume = 1f;
 
-			rollVolume = 0f; 
+			rollVolume = 0f;
 		}
 
 		rollVolume = Mathf.Max(0f, rollVolume);
